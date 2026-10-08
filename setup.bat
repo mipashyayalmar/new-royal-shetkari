@@ -1,10 +1,10 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-title Royal Shetkari POS - first-time setup
+title Royal Shetkari - first-time setup
 
 echo ============================================================
-echo  Royal Shetkari POS - first-time setup
+echo  Royal Shetkari - first-time setup
 echo  Needs: Windows 10/11, Python 3.12 or newer, internet (once)
 echo ============================================================
 echo.

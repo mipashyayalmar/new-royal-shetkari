@@ -1,5 +1,5 @@
 """
-Runs Royal Shetkari POS on this PC with waitress (a production web server
+Runs Royal Shetkari on this PC with waitress (a production web server
 that works on Windows) and opens the login page in the browser once the
 server is answering. Called by start.bat. Close the window to stop.
 """
@@ -48,7 +48,7 @@ def lan_addresses():
 
 def main():
     if port_busy():
-        print(f"Royal Shetkari POS (or another program) is already running on port {PORT}.")
+        print(f"Royal Shetkari (or another program) is already running on port {PORT}.")
         print(f"Opening {URL}")
         webbrowser.open(URL)
         return
@@ -56,7 +56,7 @@ def main():
     from core.wsgi import application
 
     print("=" * 64)
-    print(" Royal Shetkari POS is running.")
+    print(" Royal Shetkari is running.")
     print(f" On this PC:  {URL}")
     if HOST == "0.0.0.0":
         for ip in lan_addresses():

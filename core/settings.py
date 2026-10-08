@@ -876,14 +876,14 @@ CELERY_BEAT_SCHEDULE = {
 # Admin theme (django-jazzmin)
 # -------------------------------------------------------
 JAZZMIN_SETTINGS = {
-    "site_title": "Royal Shetkari Admin",
+    "site_title": "Royal Shetkari",
     "site_header": "Royal Shetkari",
     "site_brand": "Royal Shetkari",
     "site_logo": "img/royal_shetkari_mark.svg",
     "login_logo": "img/royal_shetkari_mark.svg",
     "site_logo_classes": "img-circle",
     "site_icon": "img/royal_shetkari_mark.svg",
-    "welcome_sign": "Royal Shetkari · Admin sign-in",
+    "welcome_sign": "Royal Shetkari",
     "copyright": "Royal Shetkari",
     "search_model": ["orders.Order", "menu.MenuItem", "accounts.User"],
     "user_avatar": None,

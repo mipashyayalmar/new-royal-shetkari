@@ -1,5 +1,5 @@
 """
-Prepares this PC to run Royal Shetkari POS. Called by setup.bat and start.bat;
+Prepares this PC to run Royal Shetkari. Called by setup.bat and start.bat;
 safe to run any number of times.
 
   --first-run   also load the Royal Shetkari menu and sample data
@@ -58,7 +58,7 @@ def ensure_env():
     }
     added = [k for k in wanted if k not in values]
     if not ENV.exists():
-        header = ("# Royal Shetkari POS - settings for this PC (created by setup.bat).\n"
+        header = ("# Royal Shetkari - settings for this PC (created by setup.bat).\n"
                   "# Keep this file private. Do NOT change SECRET_KEY or FIELD_ENCRYPTION_KEY once data exists.\n"
                   "# HOST=0.0.0.0 lets tablets/phones on the restaurant Wi-Fi open the POS (see WINDOWS_SETUP.md).\n")
         ENV.write_text(header, encoding="utf-8")

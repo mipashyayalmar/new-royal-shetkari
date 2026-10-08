@@ -1,7 +1,7 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-title Royal Shetkari POS
+title Royal Shetkari
 
 if not exist ".venv\Scripts\python.exe" (
     echo The POS is not installed on this PC yet. Double-click setup.bat first.
@@ -9,7 +9,7 @@ if not exist ".venv\Scripts\python.exe" (
     exit /b 1
 )
 
-echo Preparing Royal Shetkari POS (backup + database check)...
+echo Preparing Royal Shetkari (backup + database check)...
 ".venv\Scripts\python.exe" scripts\windows\local_setup.py
 if errorlevel 1 goto :fail
 

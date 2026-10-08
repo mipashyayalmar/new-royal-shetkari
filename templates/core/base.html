@@ -8,7 +8,7 @@
     <meta name="theme-color" content="#0a0a0a">
     <!-- Inline dark background — prevents white flash between page navigations -->
     <style>html,body{background:#0a0a0a;}</style>
-    <title>{% block title %}{{ request.user.tenant.name|default:"Royal Shetkari POS" }}{% endblock %}</title>
+    <title>{% block title %}{{ request.user.tenant.name|default:"Royal Shetkari" }}{% endblock %}</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">
@@ -256,7 +256,7 @@
             {% block header_left %}
             <a href="/dashboard/" class="brand-title">
                 <i class="bi bi-diamond-half"></i>
-                <span>{{ request.user.tenant.name|default:"Royal Shetkari POS" }}</span>
+                <span>{{ request.user.tenant.name|default:"Royal Shetkari" }}</span>
             </a>
             <p class="brand-subtitle">{{ request.user.outlet.name|default:"Standard Outlet" }}</p>
             {% endblock %}
