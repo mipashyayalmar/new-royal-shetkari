@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Receipt</title>
+<style>
+/* ── Thermal paper formatting ─────────────────────────────────────────── */
+@page {
+  size: {{ paper_width }}mm auto;
+  margin: 2mm 3mm;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: {{ font_size }}px;
+  width: {{ paper_width }}mm;
+  max-width: {{ paper_width }}mm;
+  color: #000;
+  background: #fff;
+}
+
+.center  { text-align: center; }
+.right   { text-align: right; }
+.bold    { font-weight: bold; }
+.big     { font-size: {{ big_font }}px; font-weight: bold; }
+.small   { font-size: {{ small_font }}px; }
+
+.sep     { border-top: 1px dashed #000; margin: 2mm 0; }
+.sep-solid { border-top: 1px solid #000; margin: 2mm 0; }
+
+/* Two-column row */
+.row { display: flex; justify-content: space-between; }
+.row .label { flex: 1; }
+.row .value { white-space: nowrap; padding-left: 2mm; }
+
+/* Token number — large for QSR */
+.token-num {
+  font-size: {{ token_font }}px;
+  font-weight: bold;
+  text-align: center;
+  padding: 1mm 0;
+  letter-spacing: 1px;
+}
+
+/* KOT section */
+.kot-section {
+  margin-top: 3mm;
+  padding-top: 2mm;
+}
+.kot-header {
+  font-size: {{ big_font }}px;
+  font-weight: bold;
+  text-align: center;
+}
+.station-label {
+  text-align: center;
+  font-size: {{ small_font }}px;
+  border: 1px solid #000;
+  display: inline-block;
+  padding: 0 2mm;
+  margin: 1mm auto;
+  width: 100%;
+}
+.item-line { padding: 0.5mm 0; }
+.item-qty  { font-weight: bold; }
+.item-note { padding-left: 3mm; font-size: {{ small_font }}px; }
+
+@media print {
+  html, body { width: {{ paper_width }}mm; }
+  .no-print  { display: none !important; }
+}
+</style>
+</head>
+<body>
+
+{% if split_mode %}
+<!-- ══════════════════════════════════════════════════════════════
+     COUNTER BILLING MODE — one page per section + summary page
+     Chrome --kiosk-printing prints all pages automatically.
+     Each page-break becomes a separate slip from the printer.
+     ══════════════════════════════════════════════════════════════ -->
+
+<!-- Page 1: Summary bill (customer keeps) -->
+<div style="page-break-after: always;">
+{% with is_comp=order.is_bill_of_supply %}
+<div class="center bold" style="font-size:{{ big_font }}px;">{{ order.tenant.name }}</div>
+<div class="center small">{{ order.outlet.name }}</div>
+{% if order.outlet.gst_no %}<div class="center small">GSTIN: {{ order.outlet.gst_no }}</div>{% endif %}
+<div class="center bold small">{{ layout.title|upper }}</div>
+{% if layout.statement %}<div class="center small">{{ layout.statement }}</div>{% endif %}
+<div class="sep-solid"></div>
+{% if token %}<div class="token-num">TOKEN {{ token }}</div>{% endif %}
+<div class="row small"><span class="label">Bill</span><span class="value">{{ order.display_number }}</span></div>
+<div class="row small"><span class="label">Date</span><span class="value">{{ order.created_at|date:"d/m/Y H:i" }}</span></div>
+<div class="sep"></div>
+
+<!-- FULL item list — customer keeps this as their complete bill -->
+{% include "orders/includes/thermal_bill_lines.html" with show_notes=False %}
+
+<div class="sep"></div>
+{% include "orders/includes/thermal_bill_money.html" %}
+<div class="sep-solid"></div>
+<div class="center small">Thank you! Visit again</div>
+{% endwith %}
+</div>
+
+<!-- Pages 2+: One slip per category -->
+{% for group in category_groups %}
+<div style="{% if not forloop.last %}page-break-after: always;{% endif %}">
+<div class="center bold" style="font-size:{{ big_font }}px;">{{ group.cat_name|upper }}</div>
+{% if token %}<div class="center small">Token {{ token }}</div>{% endif %}
+<div class="sep-solid"></div>
+{% for item in group.items %}
+<div class="item-line">
+  <span class="item-qty">{{ item.quantity }}x</span>
+  <span>{% if item.menu_item.is_veg %}[V]{% else %}[N]{% endif %} {{ item.menu_item.name }}</span>
+</div>
+{% if item.notes %}<div class="item-note">* {{ item.notes }}</div>{% endif %}
+{% endfor %}
+<div class="sep"></div>
+<div class="row bold"><span class="label">Total</span><span class="value">Rs.{{ group.total|floatformat:2 }}</span></div>
+<div class="sep-solid"></div>
+<div class="center small">Thank you! Visit again</div>
+</div>
+{% endfor %}
+
+{% else %}
+<!-- ── Normal single receipt ──────────────────────────────────── -->
+{% with is_comp=order.is_bill_of_supply %}
+<div class="center bold" style="font-size:{{ big_font }}px;">{{ order.tenant.name }}</div>
+<div class="center small">{{ order.outlet.name }}</div>
+{% if order.outlet.address %}<div class="center small">{{ order.outlet.address }}</div>{% endif %}
+{% if order.outlet.phone %}<div class="center small">Ph: {{ order.outlet.phone }}</div>{% endif %}
+{% if order.outlet.gst_no %}<div class="center small">GSTIN: {{ order.outlet.gst_no }}</div>{% endif %}
+{% if order.outlet.fssai_no %}<div class="center small">FSSAI: {{ order.outlet.fssai_no }}</div>{% endif %}
+<div class="center small">SAC: {{ order.outlet.sac_code|default:"996331" }}</div>
+<div class="center bold small" style="margin-top:1mm;">{{ layout.title|upper }}</div>
+{% if layout.statement %}<div class="center small">{{ layout.statement }}</div>{% endif %}
+
+<div class="sep-solid"></div>
+
+{% if token %}
+<div class="token-num">TOKEN {{ token }}</div>
+<div class="sep"></div>
+{% else %}
+<div class="row small"><span class="label">Bill No.</span><span class="value">{{ order.display_number }}</span></div>
+{% if order.table %}<div class="row small"><span class="label">Table</span><span class="value">{{ order.table.name }}</span></div>{% endif %}
+<div class="row small"><span class="label">Date</span><span class="value">{{ order.created_at|date:"d/m/Y H:i" }}</span></div>
+<div class="sep"></div>
+{% endif %}
+
+<!-- Items -->
+{% include "orders/includes/thermal_bill_lines.html" with show_notes=True %}
+
+<div class="sep"></div>
+{% include "orders/includes/thermal_bill_money.html" %}
+
+{% if upi_qr_url %}
+<div class="sep-solid"></div>
+<div class="center small">SCAN &amp; PAY &middot; Bill {{ order.display_number }}</div>
+<div class="center" style="font-weight:700;">Amount due: Rs.{{ amount_due }}</div>
+<div class="center"><img src="{{ upi_qr_url }}" alt="Scan and pay QR" style="width:70%;max-width:260px;height:auto;"></div>
+{% if pay_config.upi_payee_name %}<div class="center small">Pay to {{ pay_config.upi_payee_name }}</div>{% endif %}
+{% if pay_config.upi_id %}<div class="center small">UPI: {{ pay_config.upi_id }}</div>{% endif %}
+<div class="center small">Show the payment success screen to the cashier. Bill is paid once the cashier confirms receipt.</div>
+{% endif %}
+
+<div class="sep-solid"></div>
+<div class="center small">Thank you for visiting!</div>
+<div class="center small">Thank you! Visit again</div>
+{% endwith %}
+{% endif %}{# end split_mode else #}
+
+<!-- ── KOT Sections — only in normal mode, NOT in counter billing split mode ── -->
+{% if not split_mode %}
+{% for kot in kots %}
+<div class="kot-section">
+  <div class="sep-solid"></div>
+  <div class="kot-header">KOT #{{ kot.kot_number }}</div>
+  {% if token %}<div class="center small">Token: {{ token }}</div>
+  {% elif order.table %}<div class="center small">Table: {{ order.table.name }}</div>{% endif %}
+  {% if kot.station %}<div class="station-label">{{ kot.station.name }}</div>{% endif %}
+  <div class="sep"></div>
+  {% for item in kot.items.all %}
+  <div class="item-line">
+    <span class="item-qty bold">{{ item.quantity }}x</span>
+    <span> {% if item.menu_item.is_veg %}[V]{% else %}[N]{% endif %} {{ item.menu_item.name }}</span>
+  </div>
+  {% if item.notes %}<div class="item-note">* {{ item.notes }}</div>{% endif %}
+  {% for mod in item.modifiers.all %}<div class="item-note">+ {{ mod.name }}</div>{% endfor %}
+  {% endfor %}
+  <div class="sep"></div>
+  <div class="right small">{{ order.created_at|date:"H:i d/m" }}</div>
+</div>
+{% endfor %}
+{% endif %}{# end if not split_mode #}
+
+<div style="margin-top:5mm;"></div>
+
+<!-- Auto-print on load ──────────────────────────────────────── -->
+<script>
+window.addEventListener('load', function() {
+  // Small delay so fonts/content render before print dialog opens
+  setTimeout(function() {
+    window.print();
+    // Close the window after printing (user can cancel print dialog to keep it open)
+    window.addEventListener('afterprint', function() {
+      window.close();
+    });
+  }, 400);
+});
+</script>
+
+</body>
+</html>

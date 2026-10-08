@@ -1,0 +1,185 @@
+# test_rasova_agent.py
+"""
+Tests for rasova_agent.py's Windows auto-start / crash-restart watchdog.
+
+Standalone script, not a Django app, so this uses plain unittest. It runs
+with the rest (`manage.py test` finds agent/test_*.py) or on its own:
+
+    python -m unittest agent.test_rasova_agent
+
+Background: the Android/Termux path has always had real crash recovery --
+its boot script is a shell loop ("run the agent; if it dies, sleep 3s and
+run it again, forever"), restarted by the Termux:Boot watchdog even if
+Android kills the whole process. The Windows path only ever had a VBS
+launcher that starts the agent ONCE at login with no restart on crash --
+if the process died mid-shift (a printer driver hang, an unhandled
+exception, a Windows update killing background processes), it stayed dead
+until the next login or reboot. Since this is the exact process keeping
+every printer in the restaurant reachable, that gap matters.
+
+Fix: install_autostart() now writes a small watchdog .bat (the same
+"run it, wait, run it again forever" shape as the Termux shell script) and
+points the VBS launcher at the watchdog instead of at the agent directly.
+"""
+import os
+import shutil
+import subprocess
+import tempfile
+import unittest
+from unittest.mock import patch
+
+from agent import rasova_agent
+
+
+class _TempDirsMixin:
+    def setUp(self):
+        self._tmp = tempfile.mkdtemp(prefix="rasova_agent_test_")
+        self._startup_dir = os.path.join(self._tmp, "Startup")
+        self._config_dir = os.path.join(self._tmp, "Rasova")
+        os.makedirs(self._startup_dir, exist_ok=True)
+        os.makedirs(self._config_dir, exist_ok=True)
+
+        self._patches = [
+            patch.object(rasova_agent, "_startup_dir", lambda: self._startup_dir),
+            patch.object(rasova_agent, "CONFIG_DIR", self._config_dir),
+            patch.object(rasova_agent, "IS_WINDOWS", True),
+            patch.object(subprocess, "run", return_value=None),
+        ]
+        for p in self._patches:
+            p.start()
+
+    def tearDown(self):
+        for p in self._patches:
+            p.stop()
+        shutil.rmtree(self._tmp, ignore_errors=True)
+
+
+class InstallWritesCrashRestartWatchdogTest(_TempDirsMixin, unittest.TestCase):
+    def test_install_writes_a_watchdog_bat_with_a_restart_loop(self):
+        rasova_agent.install_autostart()
+
+        watchdog_path = rasova_agent._watchdog_bat_path()
+        self.assertTrue(os.path.exists(watchdog_path))
+
+        with open(watchdog_path, encoding="utf-8") as f:
+            contents = f.read()
+        # Structurally a "run it, wait, run it again forever" loop - the
+        # same shape as the Termux boot script's `while true; do ...; done`.
+        self.assertIn(":loop", contents)
+        self.assertIn("goto loop", contents)
+        self.assertIn("timeout", contents)
+        self.assertIn(os.path.abspath(rasova_agent.__file__), contents)
+
+    def test_vbs_launcher_points_at_the_watchdog_not_the_agent_directly(self):
+        # This is the actual regression: before the fix, the VBS ran the
+        # agent directly with no restart-on-crash at all.
+        rasova_agent.install_autostart()
+
+        vbs_path = rasova_agent._vbs_path()
+        self.assertTrue(os.path.exists(vbs_path))
+        with open(vbs_path, encoding="utf-8") as f:
+            vbs_contents = f.read()
+
+        watchdog_path = rasova_agent._watchdog_bat_path()
+        self.assertIn(watchdog_path, vbs_contents)
+        self.assertNotIn(os.path.abspath(rasova_agent.__file__), vbs_contents)
+
+    def _watchdog_for(self, *interpreters):
+        """The watchdog written when the Python folder holds `interpreters`
+        and the agent runs under python.exe from it (a Windows install,
+        on any OS the tests run on)."""
+        python_dir = os.path.join(self._tmp, "Python313")
+        os.makedirs(python_dir)
+        for name in interpreters:
+            open(os.path.join(python_dir, name), "w").close()
+        with patch.object(rasova_agent.sys, "executable", os.path.join(python_dir, "python.exe")):
+            rasova_agent.install_autostart()
+        with open(rasova_agent._watchdog_bat_path(), encoding="utf-8") as f:
+            return python_dir, f.read()
+
+    def test_watchdog_bat_launches_pythonw_when_available(self):
+        # pythonw.exe runs with no console window. It's still a real
+        # interpreter started in the foreground of the loop (not "start"),
+        # so the loop notices when the agent dies.
+        python_dir, contents = self._watchdog_for("python.exe", "pythonw.exe")
+        self.assertIn(f'"{os.path.join(python_dir, "pythonw.exe")}" "', contents)
+
+    def test_watchdog_bat_falls_back_to_python_without_pythonw(self):
+        python_dir, contents = self._watchdog_for("python.exe")
+        self.assertIn(f'"{os.path.join(python_dir, "python.exe")}" "', contents)
+        self.assertNotIn("pythonw", contents)
+
+
+class UninstallRemovesWatchdogTest(_TempDirsMixin, unittest.TestCase):
+    def test_uninstall_removes_both_vbs_and_watchdog_bat(self):
+        rasova_agent.install_autostart()
+        self.assertTrue(os.path.exists(rasova_agent._vbs_path()))
+        self.assertTrue(os.path.exists(rasova_agent._watchdog_bat_path()))
+
+        rasova_agent.uninstall_autostart()
+
+        self.assertFalse(os.path.exists(rasova_agent._vbs_path()))
+        self.assertFalse(os.path.exists(rasova_agent._watchdog_bat_path()))
+
+    def test_uninstall_on_clean_system_does_not_raise(self):
+        # Nothing was ever installed - must be a clean no-op, not an error.
+        try:
+            rasova_agent.uninstall_autostart()
+        except Exception as e:
+            self.fail(f"uninstall_autostart() raised on a clean system: {e}")
+
+    def test_uninstall_survives_process_kill_failure(self):
+        # The best-effort "kill it right now" step must never make uninstall
+        # look like it failed just because wmic isn't available/erroring.
+        rasova_agent.install_autostart()
+        with patch.object(subprocess, "run", side_effect=OSError("wmic not found")):
+            try:
+                rasova_agent.uninstall_autostart()
+            except Exception as e:
+                self.fail(f"uninstall_autostart() raised when process-kill failed: {e}")
+        # The files must still have been removed despite the kill step failing.
+        self.assertFalse(os.path.exists(rasova_agent._vbs_path()))
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+
+class PollTargetTest(unittest.TestCase):
+    """The agent's key goes in the X-Agent-Key header, never in a URL
+    (the server no longer accepts it in the path, which logged it)."""
+
+    KEY = "3f2b8a1c-9d4e-4f6a-8b7c-1a2b3c4d5e6f"
+
+    def test_server_and_key(self):
+        self.assertEqual(
+            rasova_agent.poll_target(["agent", "--server", "https://rasova.net/", "--key", self.KEY]),
+            ("https://rasova.net", self.KEY))
+
+    def test_an_old_poll_url_still_works(self):
+        old = f"https://rasova.net/orders/agent/{self.KEY}/"
+        self.assertEqual(rasova_agent.poll_target(["agent", "--poll", old]), ("https://rasova.net", self.KEY))
+
+    def test_nothing_usable(self):
+        for argv in (["agent", "--poll"], ["agent", "--poll", "https://rasova.net/orders/agent/"],
+                     ["agent", "--server", "https://rasova.net"]):
+            self.assertIsNone(rasova_agent.poll_target(argv), argv)
+
+    def test_every_request_carries_the_key_in_a_header_not_the_url(self):
+        seen = []
+
+        class _Response:
+            def read(self):
+                return b'{"jobs": []}'
+
+        def fake_urlopen(request, timeout):
+            seen.append(request)
+            raise KeyboardInterrupt      # stop the loop after the first poll
+
+        with patch("urllib.request.urlopen", fake_urlopen):
+            with self.assertRaises(KeyboardInterrupt):
+                rasova_agent.run_poll_mode("https://rasova.net", self.KEY, interval=0)
+        [request] = seen
+        self.assertEqual(request.full_url, "https://rasova.net/orders/agent/jobs/")
+        self.assertEqual(request.get_header("X-agent-key"), self.KEY)
+        self.assertNotIn(self.KEY, request.full_url)

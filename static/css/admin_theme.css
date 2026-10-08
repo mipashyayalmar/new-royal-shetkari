@@ -1,0 +1,202 @@
+/* Royal Shetkari admin theme: layered on Jazzmin's "darkly" theme so the
+   admin matches the POS (gold accent, Outfit + DM Serif Display). */
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap");
+
+:root {
+    --rs-gold: #c5a059;
+    --rs-gold-soft: rgba(197, 160, 89, 0.14);
+    --rs-gold-line: rgba(197, 160, 89, 0.35);
+    --rs-bg: #0e0e0e;
+    --rs-panel: #161616;
+    --rs-panel-2: #1d1d1d;
+    --rs-border: #2a2a2a;
+    --rs-text: #ececec;
+    --rs-muted: #9a9a9a;
+}
+
+body, .content-wrapper, .main-footer, .card, .form-control, .btn, .nav-link,
+.dropdown-menu, .table, .select2-container {
+    font-family: "Outfit", system-ui, sans-serif !important;
+}
+
+body, .content-wrapper { background: var(--rs-bg) !important; color: var(--rs-text); }
+
+/* Headings + brand */
+h1, h2, h3, .content-header h1, .card-title, .brand-text, .login-logo, .login-box-msg {
+    font-family: "DM Serif Display", Georgia, serif !important;
+    font-weight: 400 !important;
+    letter-spacing: 0.3px;
+}
+.content-header h1 { font-size: 1.9rem; color: var(--rs-text); }
+.brand-link { border-bottom: 1px solid var(--rs-border) !important; background: #0a0a0a !important; }
+.brand-link .brand-text { color: var(--rs-gold) !important; font-size: 1.25rem; }
+.brand-link .brand-image { background: var(--rs-gold-soft); padding: 3px; box-shadow: none !important; }
+
+/* Top bar */
+.main-header.navbar {
+    background: rgba(14, 14, 14, 0.92) !important;
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--rs-border) !important;
+}
+.main-header .nav-link { color: var(--rs-muted) !important; }
+.main-header .nav-link:hover { color: var(--rs-gold) !important; }
+
+/* Sidebar */
+.main-sidebar { background: #0a0a0a !important; border-right: 1px solid var(--rs-border); }
+.nav-sidebar .nav-header {
+    color: var(--rs-gold) !important;
+    font-size: 0.68rem; letter-spacing: 2px; text-transform: uppercase; opacity: 0.85;
+}
+.nav-sidebar .nav-link { color: #bdbdbd !important; border-radius: 0 !important; }
+.nav-sidebar .nav-link:hover { color: #fff !important; background: var(--rs-gold-soft) !important; }
+.nav-sidebar .nav-link.active,
+.sidebar-dark-warning .nav-sidebar > .nav-item > .nav-link.active {
+    background: var(--rs-gold-soft) !important;
+    color: var(--rs-gold) !important;
+    border-left: 3px solid var(--rs-gold);
+    box-shadow: none !important;
+}
+.nav-sidebar .nav-icon { color: var(--rs-gold); opacity: 0.85; }
+.sidebar .form-control-sidebar, .sidebar .btn-sidebar { background: var(--rs-panel-2) !important; border-color: var(--rs-border) !important; }
+
+/* Cards / panels */
+.card {
+    background: var(--rs-panel) !important;
+    border: 1px solid var(--rs-border) !important;
+    border-radius: 6px !important;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4) !important;
+}
+.card-header { background: transparent !important; border-bottom: 1px solid var(--rs-border) !important; }
+.card-header .card-title, .card-header h5 { color: var(--rs-gold) !important; }
+
+/* Dashboard app list */
+.content .table td, .content .table th { border-color: var(--rs-border) !important; }
+.content .table a { color: var(--rs-text); }
+.content .table a:hover { color: var(--rs-gold); text-decoration: none; }
+.table-striped tbody tr:nth-of-type(odd) { background: rgba(255, 255, 255, 0.02) !important; }
+.table-hover tbody tr:hover { background: var(--rs-gold-soft) !important; }
+thead th { color: var(--rs-muted) !important; font-weight: 500; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; }
+
+/* Links, accents, buttons */
+a { color: var(--rs-gold); }
+a:hover { color: #e0c07d; }
+.btn { border-radius: 4px !important; letter-spacing: 0.4px; }
+.btn-warning, .btn-primary {
+    background: var(--rs-gold) !important; border-color: var(--rs-gold) !important; color: #111 !important; font-weight: 600;
+}
+.btn-warning:hover, .btn-primary:hover { background: #d6b26a !important; border-color: #d6b26a !important; }
+.btn-outline-light { border-color: var(--rs-border) !important; color: var(--rs-text) !important; }
+.btn-outline-light:hover { border-color: var(--rs-gold) !important; color: var(--rs-gold) !important; background: transparent !important; }
+.badge-warning, .bg-warning { background: var(--rs-gold) !important; color: #111 !important; }
+.page-item.active .page-link { background: var(--rs-gold) !important; border-color: var(--rs-gold) !important; color: #111 !important; }
+.page-link { background: var(--rs-panel-2) !important; border-color: var(--rs-border) !important; color: var(--rs-text) !important; }
+
+/* Forms */
+.form-control, .custom-select, .select2-container--default .select2-selection--single,
+.select2-container--default .select2-selection--multiple {
+    background: var(--rs-panel-2) !important;
+    border: 1px solid var(--rs-border) !important;
+    color: var(--rs-text) !important;
+    border-radius: 4px !important;
+}
+.form-control:focus { border-color: var(--rs-gold) !important; box-shadow: 0 0 0 2px var(--rs-gold-soft) !important; }
+label, .col-form-label { color: var(--rs-muted); font-weight: 500; }
+.nav-tabs .nav-link.active { background: var(--rs-panel) !important; color: var(--rs-gold) !important; border-color: var(--rs-border) var(--rs-border) var(--rs-panel) !important; }
+.nav-tabs { border-bottom-color: var(--rs-border) !important; }
+
+/* Changelist filters / actions */
+#changelist-search .form-control { min-width: 240px; }
+.actions { background: var(--rs-panel); border: 1px solid var(--rs-border); padding: 0.5rem 0.75rem; border-radius: 6px; }
+
+/* Messages */
+.alert { border-radius: 6px !important; border: 1px solid var(--rs-border) !important; }
+.alert-success { background: rgba(46, 160, 67, 0.15) !important; color: #7ee2a0 !important; }
+.alert-warning { background: var(--rs-gold-soft) !important; color: var(--rs-gold) !important; }
+.alert-danger, .errornote { background: rgba(220, 53, 69, 0.15) !important; color: #ff8a95 !important; }
+
+/* Breadcrumbs + footer */
+.breadcrumb { background: transparent !important; }
+.breadcrumb-item a { color: var(--rs-muted); }
+.breadcrumb-item.active { color: var(--rs-gold); }
+.main-footer { background: #0a0a0a !important; border-top: 1px solid var(--rs-border) !important; color: var(--rs-muted) !important; font-size: 0.8rem; }
+
+/* Login page */
+body.login-page {
+    background:
+        radial-gradient(circle at 15% 20%, rgba(197, 160, 89, 0.16), transparent 45%),
+        radial-gradient(circle at 85% 85%, rgba(197, 160, 89, 0.08), transparent 40%),
+        #0a0a0a !important;
+    background-attachment: fixed !important;
+    min-height: 100vh;
+}
+html { background: #0a0a0a; }
+.login-box { width: 380px; max-width: calc(100vw - 32px); }
+.login-logo img { max-height: 80px; display: block; margin: 0 auto 0.75rem; }
+.login-logo .logo-dark + .logo-light, .login-logo .logo-light + .logo-dark { display: none; }
+.login-logo, .login-logo a { color: var(--rs-gold) !important; font-size: 2rem; }
+.login-card-body, .login-page .card {
+    background: var(--rs-panel) !important;
+    border: 1px solid var(--rs-gold-line) !important;
+    border-radius: 8px !important;
+}
+.login-box-msg { color: var(--rs-text) !important; font-size: 1.15rem; }
+.login-page .input-group-text { background: var(--rs-panel-2) !important; border-color: var(--rs-border) !important; color: var(--rs-gold) !important; }
+
+/* Scrollbars */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--rs-gold); }
+
+/* ── Jazzmin 3 / AdminLTE 4 layout ─────────────────────────────── */
+body.theme-darkly, .app-wrapper, .app-main, .app-content, .app-content-header {
+    background: var(--rs-bg) !important;
+}
+.app-header.navbar {
+    background: rgba(14, 14, 14, 0.94) !important;
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--rs-border) !important;
+}
+.app-header .nav-link { color: var(--rs-muted) !important; }
+.app-header .nav-link:hover { color: var(--rs-gold) !important; }
+.app-header .form-control { background: var(--rs-panel-2) !important; }
+.app-header .btn-navbar { background: var(--rs-panel-2) !important; border: 1px solid var(--rs-border) !important; color: var(--rs-gold) !important; }
+
+.app-sidebar { background: #0a0a0a !important; border-right: 1px solid var(--rs-border) !important; box-shadow: none !important; }
+.app-sidebar .sidebar-brand, .app-sidebar .brand-link {
+    background: #0a0a0a !important; border-bottom: 1px solid var(--rs-border) !important;
+}
+.app-sidebar .brand-image { opacity: 1 !important; box-shadow: none !important; background: transparent !important; }
+.app-sidebar .brand-text { color: var(--rs-gold) !important; font-family: "DM Serif Display", Georgia, serif !important; }
+.app-sidebar .nav-link p { margin: 0; }
+.app-sidebar .nav-link .nav-arrow { color: #555; font-size: 0.7rem; }
+.app-sidebar .nav-treeview .nav-link { padding-left: 2rem; font-size: 0.88rem; }
+.app-sidebar .user-panel, .app-sidebar .user-panel a { color: var(--rs-muted) !important; border-bottom-color: var(--rs-border) !important; }
+
+/* Dashboard app cards: card header is the app name */
+.app-content .card-header { padding: 0.9rem 1.1rem; }
+.app-content .card-header h5, .app-content .card-header .card-title { font-size: 1.25rem; margin: 0; }
+.app-content .table td { vertical-align: middle; padding: 0.6rem 0.9rem; }
+
+/* Add / Change / View: quiet outline buttons instead of bright green/blue */
+.btn.addlink, .btn.changelink, .btn.viewlink {
+    background: transparent !important;
+    border: 1px solid var(--rs-border) !important;
+    color: var(--rs-muted) !important;
+    font-size: 0.75rem !important;
+    padding: 0.2rem 0.65rem !important;
+    font-weight: 500;
+}
+.btn.addlink:hover { border-color: #3fb27f !important; color: #3fb27f !important; }
+.btn.changelink:hover, .btn.viewlink:hover { border-color: var(--rs-gold) !important; color: var(--rs-gold) !important; }
+.btn.addlink::before { content: "+ "; }
+
+/* Recent actions timeline */
+.timeline > div > .timeline-item { background: var(--rs-panel) !important; border: 1px solid var(--rs-border) !important; box-shadow: none !important; }
+.timeline::before { background: var(--rs-border) !important; }
+.timeline-header a, .timeline-item h3 a { color: var(--rs-gold) !important; }
+
+.app-footer { background: #0a0a0a !important; border-top: 1px solid var(--rs-border) !important; color: var(--rs-muted) !important; font-size: 0.8rem; }
+.btn.addlink, .btn.changelink, .btn.viewlink { white-space: nowrap; }
+input[type="number"], input[type="text"], input[type="email"], input[type="password"], input[type="url"], input[type="date"], input[type="time"], textarea, select {
+    background-color: var(--rs-panel-2); border: 1px solid var(--rs-border); color: var(--rs-text); border-radius: 4px;
+}

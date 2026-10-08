@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bill — {{ tenant.name }}</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: #0a0a0a;
+    color: #e8e2d8;
+    font-family: -apple-system, 'Segoe UI', Inter, sans-serif;
+    display: flex;
+    justify-content: center;
+    padding: 2.5rem 1rem 4rem;
+  }
+  .receipt {
+    width: 100%;
+    max-width: 420px;
+    background: #111;
+    border: 1px solid #232323;
+    padding: 2rem 1.6rem;
+  }
+  .r-header { text-align: center; margin-bottom: 1.4rem; border-bottom: 1px dashed #2a2a2a; padding-bottom: 1.4rem; }
+  .r-logo { font-family: 'Georgia', serif; font-size: 1.6rem; color: #c5a059; margin-bottom: .3rem; }
+  .r-addr { font-size: .72rem; color: #8a8278; line-height: 1.4; }
+
+  .meta { display: flex; justify-content: space-between; font-size: .78rem; margin-bottom: .9rem; }
+  .meta .lbl { font-size: .58rem; text-transform: uppercase; letter-spacing: 1.5px; color: #6a655e; margin-bottom: 2px; }
+
+  .items { border-bottom: 1px dashed #2a2a2a; margin-bottom: 1.1rem; padding-bottom: .7rem; }
+  .item { display: flex; justify-content: space-between; padding: .3rem 0; font-size: .85rem; }
+  .item-name { flex: 1; padding-right: 1rem; color: #d8d2c8; }
+  .item-val { font-family: 'Courier New', monospace; color: #c8c0b4; }
+
+  .r-title { font-size: .62rem; text-transform: uppercase; letter-spacing: 2px; color: #c5a059; margin-top: .5rem; }
+  .included { margin-top: .9rem; padding-top: .6rem; border-top: 1px dashed #2a2a2a; }
+  .included .lbl { font-size: .58rem; text-transform: uppercase; letter-spacing: 2px; color: #6a655e; margin-bottom: 4px; }
+  .total-row { display: flex; justify-content: space-between; padding: .2rem 0; font-size: .85rem; color: #b0a89c; }
+  .grand-total {
+    display: flex; justify-content: space-between;
+    font-size: 1.3rem; color: #c5a059; font-weight: 600;
+    border-top: 1px solid #2a2a2a; margin-top: .8rem; padding-top: .8rem;
+  }
+
+  .balance {
+    margin-top: 1rem; padding: .9rem; text-align: center;
+    background: rgba(197,160,89,.06); border: 1px solid #2a2a2a;
+  }
+  .balance.paid { background: rgba(34,197,94,.06); border-color: rgba(34,197,94,.2); }
+  .balance .lbl { font-size: .58rem; text-transform: uppercase; letter-spacing: 2px; color: #6a655e; margin-bottom: 4px; }
+  .balance .val { font-size: 1.05rem; font-weight: 600; color: #e8e2d8; }
+
+  .feedback-link {
+    display: block; text-align: center; margin-top: 1.2rem; padding: .8rem;
+    border: 1px solid #2a2a2a; color: #c5a059; text-decoration: none;
+    font-size: .8rem; letter-spacing: .5px;
+  }
+  .feedback-link:hover { border-color: #c5a059; }
+
+  .footer { text-align: center; font-size: .65rem; color: #4a463f; margin-top: 1.4rem; letter-spacing: .5px; }
+</style>
+</head>
+<body>
+<div class="receipt">
+  <div class="r-header">
+    <div class="r-logo">{{ tenant.name }}</div>
+    <div class="r-addr">{{ outlet.name }}{% if outlet.address %}<br>{{ outlet.address }}{% endif %}</div>
+    {% if outlet.gst_no %}<div class="r-addr">GSTIN: {{ outlet.gst_no }}</div>{% endif %}
+    <div class="r-title">{{ layout.title }}</div>
+    {% if layout.statement %}<div class="r-addr">{{ layout.statement }}</div>{% endif %}
+  </div>
+
+  <div class="meta">
+    <div><span class="lbl">Bill No.</span>{{ order.display_number }}</div>
+    <div><span class="lbl">Date</span>{{ order.created_at|date:"d M Y, h:i A" }}</div>
+  </div>
+
+  {# Lines and rows from orders/services/bill_layout.py: they add up to the total. #}
+  <div class="items">
+    {% for line in layout.lines %}
+    <div class="item">
+      <div class="item-name">{{ line.name }} <span style="color:#5a564f;">&times; {{ line.quantity }}</span></div>
+      <div class="item-val">{% if line.free %}Free{% else %}&#8377;{{ line.amount|floatformat:2 }}{% endif %}</div>
+    </div>
+    {% if line.offer_amount %}<div class="item" style="font-size:.8em;color:#7bc08a;"><div class="item-name">{{ line.offer }}</div><div class="item-val">&minus;&#8377;{{ line.offer_amount|floatformat:2 }}</div></div>{% endif %}
+    {% endfor %}
+  </div>
+
+  {% for row in layout.rows %}
+  <div class="total-row"><span>{{ row.label }}</span><span>{% if row.negative %}&minus;{% endif %}&#8377;{{ row.magnitude|floatformat:2 }}</span></div>
+  {% endfor %}
+  <div class="grand-total"><span>Total</span><span>&#8377;{{ layout.total|floatformat:2 }}</span></div>
+  {% if layout.included %}
+  <div class="included">
+    <div class="lbl">{% if layout.prices_include_gst %}Prices include GST{% else %}Prices include tax{% endif %}</div>
+    {% for tax in layout.included %}
+    {% if tax.kind == "gst" %}
+    <div class="total-row"><span>CGST {{ tax.half_rate }} on &#8377;{{ tax.taxable|floatformat:2 }}</span><span>&#8377;{{ tax.cgst|floatformat:2 }}</span></div>
+    <div class="total-row"><span>{{ layout.state_tax }} {{ tax.half_rate }} on &#8377;{{ tax.taxable|floatformat:2 }}</span><span>&#8377;{{ tax.sgst|floatformat:2 }}</span></div>
+    {% else %}
+    <div class="total-row"><span>{{ tax.label }} on &#8377;{{ tax.taxable|floatformat:2 }}</span><span>&#8377;{{ tax.tax|floatformat:2 }}</span></div>
+    {% endif %}
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if remaining > 0 %}
+  <div class="balance">
+    <div class="lbl">Balance Due</div>
+    <div class="val">&#8377;{{ remaining }}</div>
+  </div>
+  {% if upi_qr_url %}
+  <div style="text-align:center;margin-top:1rem;">
+    <div class="lbl" style="font-size:.7rem;">Scan &amp; Pay &middot; Bill {{ order.display_number }}</div>
+    <img src="{{ upi_qr_url }}" alt="Scan and pay QR" style="max-width:240px;width:100%;height:auto;background:#fff;margin-top:.4rem;">
+    {% if upi_payee_name %}<div style="font-size:.75rem;margin-top:.3rem;">Pay to {{ upi_payee_name }}</div>{% endif %}
+    {% if upi_id %}<div style="font-size:.7rem;font-family:monospace;color:#8a857c;">UPI ID: {{ upi_id }}</div>{% endif %}
+    <div style="font-size:.72rem;color:#8a857c;margin-top:.4rem;line-height:1.5;">Pay exactly &#8377;{{ remaining }} with any UPI app, then show the success screen to the cashier.
+      Your bill is marked paid only after the restaurant confirms it has received the money.</div>
+    <button id="upi-claim" type="button" style="margin-top:.7rem;padding:.6rem 1rem;border:1px solid #c9a96e;background:transparent;color:#c9a96e;cursor:pointer;">I have paid &mdash; tell the cashier</button>
+    <div id="upi-claim-msg" style="font-size:.75rem;margin-top:.5rem;"></div>
+  </div>
+  <script>
+  document.getElementById('upi-claim').addEventListener('click', async function () {
+    this.disabled = true;
+    const msg = document.getElementById('upi-claim-msg');
+    try {
+      const r = await fetch("{% url 'public-upi-claim' public_token %}", {
+        method: "POST", headers: { "X-CSRFToken": "{{ csrf_token }}" }
+      });
+      const d = await r.json();
+      msg.textContent = d.message || d.error || "Sent.";
+    } catch (e) { msg.textContent = "Could not reach the restaurant. Please tell the cashier."; this.disabled = false; }
+  });
+  </script>
+  {% endif %}
+  {% else %}
+  <div class="balance paid">
+    <div class="lbl">Status</div>
+    <div class="val">Paid in full</div>
+  </div>
+  {% endif %}
+
+  {% if show_feedback_link %}
+  <a class="feedback-link" href="{% url 'public-feedback' feedback_token %}">&#9733; Rate Your Experience</a>
+  {% endif %}
+
+  <div class="footer">Royal Shetkari</div>
+</div>
+</body>
+</html>

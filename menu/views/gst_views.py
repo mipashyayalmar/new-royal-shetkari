@@ -1,0 +1,99 @@
+"""GST rate management: per-item and bulk per-category."""
+import json
+import logging
+from decimal import Decimal
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseForbidden, JsonResponse
+from django.shortcuts import get_object_or_404, render
+from django.views.decorators.http import require_POST
+
+from core.decorators import tenant_required
+from menu.models import MenuCategory, MenuItem
+from orders.services.tax_service import GST_RATE_CHOICES, GST_RATES
+
+logger = logging.getLogger("pos.menu")
+
+
+@login_required
+@tenant_required
+def gst_management(request):
+    if request.user.role not in ["owner", "manager"]:
+        return HttpResponseForbidden()
+    from django.db.models import Prefetch
+    categories = MenuCategory.objects.filter(
+        tenant=request.user.tenant, outlet=request.user.outlet, is_active=True
+    ).prefetch_related(Prefetch("items", queryset=MenuItem.objects.select_related("vat_class")))
+    # Dishes still on a rate that no longer exists (12% and 28% before GST 2.0)
+    retired = MenuItem.objects.filter(
+        tenant=request.user.tenant, outlet=request.user.outlet,
+    ).exclude(gst_percentage__in=GST_RATES).count()
+    outlet = request.user.outlet
+    return render(request, "menu/gst_management.html", {
+        "categories": categories, "gst_rates": GST_RATE_CHOICES,
+        "valid_rates": [choice["value"] for choice in GST_RATE_CHOICES],
+        "retired_count": retired,
+        "gst_off": outlet is not None and not outlet.is_gst_registered,
+    })
+
+
+@login_required
+@tenant_required
+@require_POST
+def update_item_gst(request, item_id):
+    if request.user.role not in ["owner", "manager"]:
+        return JsonResponse({"error": "Permission denied"}, status=403)
+    item = get_object_or_404(
+        MenuItem.objects.select_related("vat_class"),
+        id=item_id, tenant=request.user.tenant, outlet=request.user.outlet,
+    )
+    if item.vat_class_id:
+        return JsonResponse(
+            {"error": f"{item.name} is liquor, taxed by VAT ({item.vat_class}), not GST."}, status=400,
+        )
+    try:
+        data = json.loads(request.body)
+        gst  = Decimal(str(data.get("gst_percentage", "5.00")))
+        if gst not in GST_RATES:
+            return JsonResponse({"error": "Invalid GST rate"}, status=400)
+        item.gst_percentage = gst
+        item.save(update_fields=["gst_percentage"])
+        logger.info("User %s set GST for '%s' → %s%%", request.user.username, item.name, gst)
+        return JsonResponse({
+            "success": True, "item_id": item.id,
+            "gst_percentage": str(gst), "message": f"{item.name} GST updated to {gst}%",
+        })
+    except Exception:
+        logger.exception("Error updating item GST")
+        return JsonResponse({"error": "Could not update GST. Please try again."}, status=400)
+
+
+@login_required
+@tenant_required
+@require_POST
+def update_category_gst(request, category_id):
+    if request.user.role not in ["owner", "manager"]:
+        return JsonResponse({"error": "Permission denied"}, status=403)
+    category = get_object_or_404(
+        MenuCategory, id=category_id, tenant=request.user.tenant, outlet=request.user.outlet
+    )
+    try:
+        data    = json.loads(request.body)
+        gst     = Decimal(str(data.get("gst_percentage", "5.00")))
+        if gst not in GST_RATES:
+            return JsonResponse({"error": "Invalid GST rate"}, status=400)
+        # Liquor in the category is taxed by VAT and keeps its 0% GST.
+        updated = category.items.filter(
+            tenant=request.user.tenant, outlet=request.user.outlet, vat_class__isnull=True,
+        ).update(gst_percentage=gst)
+        logger.info(
+            "User %s bulk-set GST for category '%s' → %s%% (%s items)",
+            request.user.username, category.name, gst, updated,
+        )
+        return JsonResponse({
+            "success": True, "category_id": category.id,
+            "gst_percentage": str(gst), "updated_count": updated,
+            "message": f"{updated} items in {category.name} updated to {gst}%",
+        })
+    except Exception:
+        logger.exception("Error bulk-updating category GST")
+        return JsonResponse({"error": "Could not update GST. Please try again."}, status=400)

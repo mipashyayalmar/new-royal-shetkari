@@ -1,0 +1,84 @@
+{% extends 'core/base.html' %}
+{% block title %}QR Payments to Verify | {{ request.user.outlet.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .upi-wrap { max-width: 980px; margin: 0 auto; padding: 1.5rem 1.5rem 5rem; }
+  .upi-note { font-size: 0.8rem; color: var(--text-muted); line-height: 1.6; border-left: 3px solid var(--accent-gold); padding: 0.5rem 0.9rem; margin: 0.5rem 0 1.5rem; }
+  .upi-table { width: 100%; border-collapse: collapse; margin-bottom: 2rem; }
+  .upi-table th { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 2px; color: var(--text-muted); font-weight: 600; padding: 0.7rem 0.6rem; border-bottom: 1px solid var(--border-color); text-align: left; }
+  .upi-table td { padding: 0.75rem 0.6rem; border-bottom: 1px solid var(--border-color); font-size: 0.85rem; vertical-align: middle; }
+  .mono { font-family: 'Space Mono', monospace; font-size: 0.78rem; }
+  .pill { font-size: 0.65rem; padding: 2px 8px; text-transform: uppercase; letter-spacing: 1px; }
+  .pill-pending { background: rgba(234,179,8,0.15); color: #b45309; }
+  .pill-verified { background: rgba(16,185,129,0.15); color: #047857; }
+  .pill-cancelled { background: rgba(148,163,184,0.2); color: var(--text-muted); }
+  .section-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 3px; color: var(--accent-gold); margin: 1.5rem 0 0.25rem; }
+  @media (max-width: 700px) { .upi-table .hide-sm { display: none; } }
+</style>
+{% endblock %}
+
+{% block header_left %}
+<div>
+  <p style="font-size:0.6rem;text-transform:uppercase;letter-spacing:3px;color:var(--accent-gold);margin:0;">{{ request.user.outlet.name }}</p>
+  <a href="/billing/" style="text-decoration:none;color:inherit;">
+    <h1 class="brand-title mb-0"><i class="bi bi-qr-code-scan me-2" style="color:var(--accent-gold);"></i>QR Payments to Verify</h1>
+  </a>
+</div>
+{% endblock %}
+
+{% block header_right %}
+<a href="/billing/" class="btn-luxury text-decoration-none">Billing</a>
+{% endblock %}
+
+{% block content %}
+<div class="upi-wrap">
+  <div class="upi-note">
+    These bills are <b>not paid yet</b>. Open the PhonePe / bank app, find the payment for the amount shown,
+    then open the bill, choose UPI and enter the transaction reference to record it.
+    A guest saying they paid is not enough on its own.
+  </div>
+
+  <div class="section-title">Waiting for verification</div>
+  {% if pending %}
+  <table class="upi-table">
+    <thead><tr><th>Order</th><th>Table</th><th>Amount</th><th class="hide-sm">QR shown</th><th>Guest says paid</th><th></th></tr></thead>
+    <tbody>
+    {% for r in pending %}
+      <tr>
+        <td class="mono">{{ r.order.display_number }}</td>
+        <td>{{ r.order.table.name|default:r.order.get_source_display }}</td>
+        <td><b>&#8377;{{ r.amount }}</b></td>
+        <td class="hide-sm">{{ r.created_at|date:"d M H:i" }}{% if r.requested_by %} &middot; {{ r.requested_by.get_username }}{% endif %}</td>
+        <td>{% if r.customer_claimed_at %}{{ r.customer_claimed_at|date:"H:i" }}{% else %}&mdash;{% endif %}</td>
+        <td><a class="btn-luxury text-decoration-none" href="{% url 'bill-view' r.order_id %}">Open bill</a></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color:var(--text-muted);font-size:0.85rem;">Nothing waiting.</p>
+  {% endif %}
+
+  <div class="section-title">Recently verified or cancelled</div>
+  {% if recent %}
+  <table class="upi-table">
+    <thead><tr><th>Order</th><th>Amount</th><th>Status</th><th>Reference</th><th class="hide-sm">Verified by</th><th class="hide-sm">When</th></tr></thead>
+    <tbody>
+    {% for r in recent %}
+      <tr>
+        <td class="mono">{{ r.order.display_number }}</td>
+        <td>&#8377;{{ r.amount }}</td>
+        <td><span class="pill pill-{{ r.status }}">{{ r.status }}</span>{% if r.is_demo %} <span class="pill pill-pending">demo</span>{% endif %}</td>
+        <td class="mono">{{ r.reference|default:"—" }}</td>
+        <td class="hide-sm">{% if r.verified_by %}{{ r.verified_by.get_username }}{% elif r.cancelled_by %}{{ r.cancelled_by.get_username }} (cancelled){% else %}&mdash;{% endif %}</td>
+        <td class="hide-sm">{% if r.verified_at %}{{ r.verified_at|date:"d M H:i" }}{% elif r.cancelled_at %}{{ r.cancelled_at|date:"d M H:i" }}{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color:var(--text-muted);font-size:0.85rem;">None yet.</p>
+  {% endif %}
+</div>
+{% endblock %}
