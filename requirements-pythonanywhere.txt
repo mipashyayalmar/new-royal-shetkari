@@ -1,0 +1,27 @@
+# PythonAnywhere (free plan, 512 MB disk): what the POS needs to run.
+# Left out on purpose (only used when their optional service is set up):
+#   psycopg2-binary (PostgreSQL), gunicorn/waitress (PythonAnywhere serves WSGI),
+#   boto3/django-storages (cloud media), google-genai (AI menu import),
+#   twilio (automatic WhatsApp), websockets/pywin32/python-escpos (print agent).
+Django==6.0.8
+requests==2.34.2
+cryptography==50.0.1
+python-dotenv==1.2.2
+pillow==12.3.0
+qrcode==8.2
+django-extensions==4.1
+django-jazzmin==3.0.5
+whitenoise==6.12.0
+celery==5.6.3
+redis==7.4.1
+django-celery-results==2.6.0
+python-dateutil==2.9.0.post0
+sentry-sdk==2.69.2
+psutil==7.2.2
+django-axes==6.4.0
+django-ratelimit==4.1.0
+openpyxl==3.1.5
+python-docx==1.1.2
+pypdf==6.19.0
+weasyprint==70.0
+rapidfuzz==3.14.6

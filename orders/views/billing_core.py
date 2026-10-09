@@ -166,8 +166,17 @@ def bill_view(request, order_id):
         # Auto-print: after payment reload, pass print=1 so template opens receipt
         auto_print = request.GET.get("print") == "1"
 
+        # WhatsApp receipt (click-to-chat: staff press Send in WhatsApp).
+        from django.urls import reverse
+        from orders.services.whatsapp_receipt import receipt_text
+        from orders.views.public_views import make_public_bill_token
+        bill_link = request.build_absolute_uri(
+            reverse("public-bill", args=[make_public_bill_token(order.id)])
+        )
+
         from orders.services.bill_layout import bill_layout
         return render(request, "orders/bill.html", {
+            "whatsapp_receipt_text": receipt_text(order, bill_link),
             "order": order,
             "layout": bill_layout(order),
             "config": config,

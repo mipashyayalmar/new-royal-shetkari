@@ -222,7 +222,7 @@
             <div class="field">
                 <label>Your POS Web Address</label>
                 <div class="subdomain-preview" id="subdomainPreview">
-                    <span class="subdomain-val" id="subdomainDisplay">{{ tenant.slug }}</span><span class="subdomain-suffix">.rasova.net</span>
+                    <span class="subdomain-val" id="subdomainDisplay">{{ tenant.slug }}</span><span class="subdomain-suffix">.{{ request.get_host }}</span>
                     <button type="button" class="subdomain-edit-btn" onclick="toggleSlugEdit()">
                         <i class="bi bi-pencil"></i> Change
                     </button>
@@ -235,7 +235,7 @@
                                oninput="checkSlug(this.value)"
                                pattern="[a-z0-9-]+"
                                autocomplete="off">
-                        <span class="subdomain-suffix">.rasova.net</span>
+                        <span class="subdomain-suffix">.{{ request.get_host }}</span>
                     </div>
                     <div class="slug-status" id="slugStatus"></div>
                 </div>
@@ -312,7 +312,7 @@
                             .then(r => r.json())
                             .then(d => {
                                 if (d.available) {
-                                    status.textContent = `✓ ${d.slug}.rasova.net is available`;
+                                    status.textContent = `✓ ${d.slug} is available`;
                                     status.className = 'slug-status slug-ok';
                                 } else {
                                     status.textContent = `✗ ${d.reason}`;

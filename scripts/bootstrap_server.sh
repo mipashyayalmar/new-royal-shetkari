@@ -19,7 +19,7 @@ set -euo pipefail
 # ─────────────────────────── CONFIG (override via env) ───────────────────────────
 APP_USER="${APP_USER:-ubuntu}"
 APP_DIR="${APP_DIR:-/home/$APP_USER/rasova}"
-REPO_URL="${REPO_URL:-https://github.com/Rajathtuesday/restaurant-pos.git}"
+REPO_URL="${REPO_URL:-https://github.com/mipashyayalmar/new-royal-shetkari.git}"
 BRANCH="${BRANCH:-qsr}"
 
 DB_NAME="${DB_NAME:-pos_db}"

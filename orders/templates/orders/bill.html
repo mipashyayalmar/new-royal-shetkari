@@ -438,6 +438,55 @@
     </div>
     {% endif %}
 
+    <!-- WhatsApp receipt: opens WhatsApp with the receipt typed in; staff press Send there -->
+    {% if order.status != 'cancelled' %}
+    <div class="loyalty-section no-print" id="waReceipt">
+        <div class="loyalty-title"><i class="bi bi-whatsapp me-1" style="color:#25d366"></i>WhatsApp Receipt</div>
+        <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem;">
+            <input id="waPhone" type="tel" class="input-pay" aria-label="Guest WhatsApp number"
+                   style="margin:0;flex:1;padding:0.6rem 0.8rem;font-size:0.9rem;font-family:'Outfit',sans-serif;text-align:left;"
+                   placeholder="Guest WhatsApp number (10 digits)" maxlength="15" inputmode="tel"
+                   value="{{ order.customer_phone|default:'' }}">
+        </div>
+        <details style="margin-bottom:0.6rem;">
+            <summary style="cursor:pointer;font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);">Check or edit the message</summary>
+            <textarea id="waText" rows="10" aria-label="WhatsApp receipt message"
+                      style="width:100%;margin-top:0.5rem;background:var(--bg-color);color:var(--text-main);border:1px solid var(--border-color);padding:0.6rem;font-size:0.8rem;font-family:'Outfit',sans-serif;"></textarea>
+        </details>
+        <button type="button" class="btn-pay" style="width:100%;padding:0.9rem;background:#25d366;border-color:#25d366;color:#fff;" onclick="openWhatsAppReceipt()">
+            <i class="bi bi-whatsapp"></i>Open WhatsApp
+        </button>
+        <div id="waMsg" class="loyalty-msg" style="font-size:0.75rem;color:var(--text-muted);">WhatsApp opens with the receipt typed in. Press Send there. Nothing is sent automatically.</div>
+    </div>
+    {{ whatsapp_receipt_text|json_script:"wa-receipt-text" }}
+    <script>
+    (function () {
+        const box = document.getElementById('waText');
+        if (box) box.value = JSON.parse(document.getElementById('wa-receipt-text').textContent);
+        // Keep the number in step with the loyalty phone box, if the guest is looked up there.
+        const lp = document.getElementById('guestPhone'), wp = document.getElementById('waPhone');
+        if (lp && wp) lp.addEventListener('input', () => { if (!wp.dataset.edited) wp.value = lp.value; });
+        if (wp) wp.addEventListener('input', () => { wp.dataset.edited = '1'; });
+    })();
+    function openWhatsAppReceipt() {
+        let digits = (document.getElementById('waPhone').value || '').replace(/\D/g, '');
+        if (digits.startsWith('00')) digits = digits.slice(2);
+        if (digits.length === 11 && digits.startsWith('0')) digits = digits.slice(1);
+        if (digits.length === 10) digits = '91' + digits;
+        const msg = document.getElementById('waMsg');
+        if (digits && (digits.length < 11 || digits.length > 15)) {
+            msg.textContent = 'That number looks wrong. Type the 10-digit mobile number.';
+            msg.style.color = 'var(--danger, #ef4444)';
+            return;
+        }
+        const text = encodeURIComponent(document.getElementById('waText').value);
+        window.open('https://wa.me/' + digits + '?text=' + text, '_blank', 'noopener');
+        msg.style.color = 'var(--text-muted)';
+        msg.textContent = digits ? 'WhatsApp opened. Press Send to deliver the receipt.' : 'No number typed: WhatsApp will ask which chat to send it to.';
+    }
+    </script>
+    {% endif %}
+
 </div><!-- .bill-wrap -->
 </div><!-- .bill-page -->
 
@@ -852,7 +901,7 @@ renderUpiQR({{ remaining }});
         } catch (_) { /* apiClient already toasted the failure */ }
     }
 
-    /* ── Rasova Print Agent ── */
+    /* ── Print Agent ── */
     const RASOVA_AGENT_URL = 'ws://{{ request.user.outlet.agent_host|default:"localhost" }}:8765';
     let _agentSocket = null;
 
@@ -898,7 +947,7 @@ renderUpiQR({{ remaining }});
                 setTimeout(() => { ws.removeEventListener('message', handler); resolve(false); }, 10000);
             });
         } catch(e) {
-            console.warn('Rasova Agent not available:', e.message);
+            console.warn('Print agent not available:', e.message);
             return false;
         }
     }
