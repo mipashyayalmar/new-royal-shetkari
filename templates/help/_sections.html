@@ -1,0 +1,1289 @@
+{% comment %}
+Help sections. Each <section> is rendered only when the signed-in role can use the
+feature (the same checks as the feature's own view) and the restaurant has the
+feature switched on. data-roles repeats that role list for the owner's Guide Access
+preview; keep the two in step when editing. Roles: owner manager cashier captain
+waiter chef kitchen. "role" comes from help/guide.html.
+
+Writing rules: name buttons exactly as the screen shows them (class rsg-ui), mark
+sample values with class rsg-eg, never describe a QR payment as paid until a cashier
+has confirmed it.
+{% endcomment %}
+
+{# ============================== GETTING STARTED ============================== #}
+
+<section class="rsg-section" id="g-start" data-group="Getting started" data-title="Start here"
+         data-roles="manager,cashier,captain,waiter,chef,kitchen" data-keywords="welcome overview beginner first day my job">
+    <h2>Start here</h2>
+    <p class="rsg-lead">This guide explains, step by step, how to use {{ request.user.tenant.name }}'s POS. It only shows the parts your login can use. You are signed in as <b>{{ request.user.get_role_display }}</b>.</p>
+
+    <div class="rsg-callout">
+        <p><b>How to read this guide.</b> Words in a box, like <span class="rsg-ui">Dispatch</span>, are the exact button or field names on the screen. Green text marked <span class="rsg-eg">Paneer Tikka</span> is a sample value: type your own. Use the contents list or the search box at the top, and <b>Previous</b>/<b>Next</b> at the bottom of each page.</p>
+    </div>
+
+    <h3>What you will do most</h3>
+    <div class="rsg-cards">
+        {% if role in "owner,manager" %}
+        <button type="button" class="rsg-card" data-goto="checklist"><i class="bi bi-list-check"></i><strong>Set up the restaurant</strong><small>Beginner checklist, in order</small></button>
+        {% endif %}
+        {% if role in "owner,manager,cashier,captain,waiter" and 'floor_plan' in tenant_features %}
+        <button type="button" class="rsg-card" data-goto="dine-in"><i class="bi bi-grid-3x3-gap"></i><strong>Take a dine-in order</strong><small>Table, dishes, send to kitchen</small></button>
+        <button type="button" class="rsg-card" data-goto="takeaway"><i class="bi bi-bag"></i><strong>Takeaway &amp; delivery</strong><small>Orders without a table</small></button>
+        {% endif %}
+        {% if role in "owner,manager,chef,kitchen" and 'kitchen_display' in tenant_features %}
+        <button type="button" class="rsg-card" data-goto="kitchen"><i class="bi bi-fire"></i><strong>Kitchen screen</strong><small>Start, Ready, Bump</small></button>
+        {% endif %}
+        {% if role in "owner,manager,cashier,captain,waiter" %}
+        <button type="button" class="rsg-card" data-goto="bill"><i class="bi bi-receipt"></i><strong>Make the bill</strong><small>Generate, discount, print</small></button>
+        {% endif %}
+        {% if role in "owner,manager,cashier,captain" %}
+        <button type="button" class="rsg-card" data-goto="pay"><i class="bi bi-cash-coin"></i><strong>Take payment</strong><small>Cash, card, part payments</small></button>
+        {% endif %}
+        {% if role in "owner,manager,cashier,captain,waiter" %}
+        <button type="button" class="rsg-card" data-goto="upi"><i class="bi bi-qr-code"></i><strong>PhonePe / UPI QR</strong><small>Stays pending until a cashier checks it</small></button>
+        {% endif %}
+        {% if role in "owner,manager" and 'reports' in tenant_features %}
+        <button type="button" class="rsg-card" data-goto="reports"><i class="bi bi-graph-up"></i><strong>Reports</strong><small>Sales, payments, stock</small></button>
+        {% endif %}
+        <button type="button" class="rsg-card" data-goto="closing"><i class="bi bi-moon-stars"></i><strong>Closing the day</strong><small>What to finish before you leave</small></button>
+        <button type="button" class="rsg-card" data-goto="problems"><i class="bi bi-life-preserver"></i><strong>Something went wrong</strong><small>Common problems and fixes</small></button>
+    </div>
+
+    <h3>Your job in this POS</h3>
+    {% if role == "owner" %}
+    <p>As <b>Owner</b> you can use every restaurant screen: setup, menu, staff, payments, kitchen, billing, stock, customers, reports and closing the day. You also see <b>Guide Access</b>, where you can preview what each staff role sees in this guide. Platform administration (adding restaurants, switching features on or off) is done by the software provider's superuser account, not by the owner.</p>
+    {% elif role == "manager" %}
+    <p>As <b>Manager</b> you run the floor and the back office: setup, menu, tables, staff (except owners), payments, discounts, refund requests, stock, purchases, shifts, cash register and reports. Approving refunds is for the owner.</p>
+    {% elif role == "cashier" %}
+    <p>As <b>Cashier</b> you take orders, make bills, give discounts, take cash and card payments, and you are one of the people allowed to <b>confirm UPI/QR payments</b> after checking the money arrived. You can also look up customers and bookings.</p>
+    {% elif role == "captain" %}
+    <p>As <b>Captain</b> you take orders at tables, send them to the kitchen, make bills, give discounts, take cash and card payments, and look after bookings. A cashier, manager or owner must confirm UPI/QR payments.</p>
+    {% elif role == "waiter" %}
+    <p>As <b>Waiter</b> you take orders at tables, send them to the kitchen, serve dishes when they are ready, answer guest calls and make the bill. A cashier, captain, manager or owner takes the payment.</p>
+    {% elif role == "chef" %}
+    <p>As <b>Chef</b> you work on the kitchen screen: start dishes, mark them ready and clear finished tickets.</p>
+    {% elif role == "kitchen" %}
+    <p>As <b>Kitchen Staff</b> you use the kitchen screen to start dishes and mark them ready.</p>
+    {% endif %}
+</section>
+
+<section class="rsg-section" id="g-login" data-group="Getting started" data-title="Log in, move around, log out"
+         data-roles="manager,cashier,captain,waiter,chef,kitchen" data-keywords="login sign in password logout username locked theme dark navigation dashboard">
+    <h2>Log in, move around, log out</h2>
+    <p class="rsg-lead">Every person has their own username and password. Never share your login: the POS records who took each order, discount and payment.</p>
+    <div class="rsg-facts">
+        <div class="rsg-fact"><b>Who</b><span>Everyone</span></div>
+        <div class="rsg-fact"><b>You need</b><span>A username and password from the owner or manager</span></div>
+        <div class="rsg-fact"><b>Where</b><span>The POS address in your browser, for example <span class="rsg-eg">http://127.0.0.1:8000/login/</span></span></div>
+    </div>
+
+    <h3>Log in</h3>
+    <ol class="rsg-steps">
+        <li>Open the POS address. You see the sign-in page.</li>
+        <li>Type your username in <span class="rsg-ui">Username</span> exactly as given (small and capital letters matter), for example <span class="rsg-eg">rs_cashier1</span>.</li>
+        <li>Type your password in <span class="rsg-ui">Password</span>.</li>
+        <li>Press <span class="rsg-ui">Sign In</span>.</li>
+    </ol>
+    <div class="rsg-outcome">
+        <div class="res"><b>Result</b>
+            {% if role in "owner,manager" %}You land on the <b>Dashboard</b>.
+            {% elif role == "cashier" %}You land on the <b>Billing</b> screen.
+            {% elif role in "captain,waiter,kitchen" %}You land on the <b>Tables</b> (floor plan) screen.
+            {% elif role == "chef" %}You land on the <b>Kitchen</b> screen.{% endif %}
+        </div>
+        <div class="nxt"><b>Next</b>{% if role in "owner,manager" %}Follow the <button type="button" class="btn btn-link p-0 align-baseline" data-goto="checklist">setup checklist</button>.{% else %}Press the clock icon at the top and <span class="rsg-ui">Clock In</span> (see <button type="button" class="btn btn-link p-0 align-baseline" data-goto="clock">Clock in and out</button>).{% endif %}</div>
+    </div>
+
+    <h3>Moving around</h3>
+    <ul>
+        <li>The restaurant name at the top left takes you back to your starting screen.</li>
+        <li>The icons at the top right are: <i class="bi bi-clock"></i> clock in/out, {% if role != "chef" %}<i class="bi bi-clock-history"></i> order history, {% endif %}<i class="bi bi-moon"></i> light/dark screen and <i class="bi bi-box-arrow-right"></i> log out. Some screens show these as words instead.</li>
+        {% if role in "owner,manager" %}
+        <li>The <b>Dashboard</b> has two rows of tiles. <b>Core Operations</b>: {% if 'floor_plan' in tenant_features %}Tables, {% endif %}{% if 'token_system' in tenant_features %}Tokens, {% endif %}Live Orders, {% if 'kitchen_display' in tenant_features %}Kitchen, {% endif %}Billing{% if 'waiter_call' in tenant_features %}, Calls{% endif %}. <b>Administrative</b>: Inventory, Menu, {% if 'qr_menu' in tenant_features %}QR Menu, Table QR Codes, {% endif %}Cash Register, Shifts, {% if 'reservations' in tenant_features %}Reservations, {% endif %}{% if 'crm' in tenant_features %}CRM, {% endif %}{% if 'reports' in tenant_features %}Reports, {% endif %}History and Setup. Below them, <b>Today's Performance</b> shows today's sales, open tables, kitchen load, low stock, voids and discounts.</li>
+        {% elif role == "cashier" %}
+        <li>The Billing screen has links at the top to the Floor Plan, Kitchen and other screens your login can open.</li>
+        {% elif role in "captain,waiter" %}
+        <li>The Tables screen has buttons at the top for Live Orders and Billing.</li>
+        {% endif %}
+        <li>The <span class="rsg-ui">How to Use</span> button at the bottom left of every screen opens this guide.</li>
+    </ul>
+
+    <h3>Log out</h3>
+    <ol class="rsg-steps">
+        <li>Press the log-out icon <i class="bi bi-box-arrow-right"></i> (or <span class="rsg-ui">Logout</span>) at the top right.</li>
+        <li>You are back on the sign-in page. Always log out on a shared tablet or PC.</li>
+    </ol>
+    <details class="rsg-more"><summary>Common problems</summary><div>
+        <ul>
+            <li><b>"Wrong username or password"</b>: check small/capital letters and that Caps Lock is off.</li>
+            <li><b>Locked out after several wrong tries</b>: ask the owner or manager to use <span class="rsg-ui">Reset Password</span> on your name in Setup → Staff. That also removes the lock.</li>
+            <li><b>A page says it isn't available for your account</b>: your role can't use that screen. Ask the manager if you need it.</li>
+            <li><b>"Session Needs a Refresh"</b>: reload the page and try again.</li>
+        </ul>
+    </div></details>
+</section>
+
+<section class="rsg-section" id="g-clock" data-group="Getting started" data-title="Clock in and out (shifts)"
+         data-roles="manager,cashier,captain,waiter,chef,kitchen" data-keywords="clock in clock out attendance shift hours tips">
+    <h2>Clock in and out</h2>
+    <p class="rsg-lead">Clocking in records when your shift starts and ends. Managers use it for attendance, hours and pay.</p>
+    <div class="rsg-facts">
+        <div class="rsg-fact"><b>Who</b><span>Everyone</span></div>
+        <div class="rsg-fact"><b>Where</b><span>The <i class="bi bi-clock"></i> clock icon at the top of most screens (opens <b>Shift Management</b>)</span></div>
+    </div>
+    <ol class="rsg-steps">
+        <li>At the start of your shift press the <i class="bi bi-clock"></i> clock icon.</li>
+        <li>Press <span class="rsg-ui">Clock In</span>. Your name appears in today's shift list with the time.</li>
+        <li>At the end of your shift come back here, type any tips in <span class="rsg-ui">Tips earned (₹)</span> if your restaurant records them (for example <span class="rsg-eg">150</span>), and press <span class="rsg-ui">Clock Out</span>.</li>
+    </ol>
+    <div class="rsg-outcome">
+        <div class="res"><b>Result</b>The list shows Clocked In, Clocked Out and Duration for your shift.</div>
+        <div class="nxt"><b>Next</b>Go back to your work screen with the restaurant name at the top left.</div>
+    </div>
+    {% if role in "owner,manager" %}
+    <details class="rsg-more"><summary>For managers: staff hours, schedule and shift templates</summary><div>
+        <ul>
+            <li>Shift Management shows every staff member's shifts for the chosen date. Use the date box at the top to look at another day, and the save icon next to Tips to correct tips.</li>
+            <li><b>Schedule Builder</b> (<a href="/shifts/schedule/">/shifts/schedule/</a>): choose <span class="rsg-ui">Staff</span>, <span class="rsg-ui">Date</span>, a <span class="rsg-ui">Shift Template (optional)</span> or start/end times, then <span class="rsg-ui">Assign</span>.</li>
+            <li><b>Templates</b> (<a href="/shifts/templates/">/shifts/templates/</a>): save common shifts once, for example <span class="rsg-eg">Lunch 11:00–16:00</span>.</li>
+        </ul>
+    </div></details>
+    {% endif %}
+    <details class="rsg-more"><summary>Common problems</summary><div>
+        <ul><li><b>Clock In does nothing</b>: you may already be clocked in. Look for your name with no "Clocked Out" time, and press <span class="rsg-ui">Clock Out</span> first if the old shift is finished.</li></ul>
+    </div></details>
+    <div class="rsg-actions"><a class="rsg-btn rsg-btn-gold" href="/shifts/"><i class="bi bi-box-arrow-up-right"></i> Open Feature: Shifts</a></div>
+</section>
+
+{# ============================== RESTAURANT SETUP ============================== #}
+{% if role in "owner,manager" %}
+
+<section class="rsg-section" id="g-checklist" data-group="Restaurant setup" data-title="Beginner setup checklist"
+         data-roles="manager" data-keywords="checklist setup first time go live order steps">
+    <h2>Beginner setup checklist</h2>
+    <p class="rsg-lead">Do these once, in this order, before the first real customer. Each line links to the help page that explains it.</p>
+    <div class="rsg-callout"><p>The first five lines show their real status, read from your restaurant's data. Check the other lines yourself.</p></div>
+    <ul class="rsg-check" data-rsg-checklist>
+        <li data-step="info"><span class="st">Checking…</span><span>Restaurant details: address, phone, GSTIN, FSSAI. <button type="button" class="btn btn-link p-0 align-baseline" data-goto="outlet">How</button></span></li>
+        <li data-step="menu"><span class="st">Checking…</span><span>Menu categories and dishes with prices and photos. <button type="button" class="btn btn-link p-0 align-baseline" data-goto="menu">How</button></span></li>
+        {% if 'floor_plan' in tenant_features %}<li data-step="tables"><span class="st">Checking…</span><span>Tables in their sections. <button type="button" class="btn btn-link p-0 align-baseline" data-goto="tables">How</button></span></li>{% endif %}
+        <li data-step="staff"><span class="st">Checking…</span><span>A login for every staff member. <button type="button" class="btn btn-link p-0 align-baseline" data-goto="staff">How</button></span></li>
+        <li data-step="payment"><span class="st">Checking…</span><span>Payment methods and the PhonePe/UPI QR. <button type="button" class="btn btn-link p-0 align-baseline" data-goto="payment-setup">How</button></span></li>
+        <li><span class="st">Check yourself</span><span>Kitchen stations, and each dish linked to the right station. <button type="button" class="btn btn-link p-0 align-baseline" data-goto="stations">How</button></span></li>
+        <li><span class="st">Check yourself</span><span>Receipt/kitchen printer and a test print. <button type="button" class="btn btn-link p-0 align-baseline" data-goto="printers">How</button></span></li>
+        {% if 'inventory' in tenant_features %}<li><span class="st">Check yourself</span><span>Stock items with low-stock alerts, and recipes on dishes. <button type="button" class="btn btn-link p-0 align-baseline" data-goto="inventory">How</button></span></li>{% endif %}
+        <li><span class="st">Check yourself</span><span>One complete test order: order → kitchen → bill → payment → receipt, then cancel or refund it as a test. <button type="button" class="btn btn-link p-0 align-baseline" data-goto="example">How</button></span></li>
+    </ul>
+    <div class="rsg-actions"><a class="rsg-btn rsg-btn-gold" href="/setup/"><i class="bi bi-box-arrow-up-right"></i> Open Feature: Setup</a></div>
+</section>
+
+<section class="rsg-section" id="g-outlet" data-group="Restaurant setup" data-title="Restaurant &amp; outlet settings"
+         data-roles="manager" data-keywords="outlet settings address phone gstin fssai logo opening closing time gst inclusive parcel charge discount limit bill code">
+    <h2>Restaurant &amp; outlet settings</h2>
+    <p class="rsg-lead">The details printed on every bill, the opening hours that decide the "business day", and billing rules such as GST pricing, parcel charge and the staff discount limit.</p>
+    <div class="rsg-facts">
+        <div class="rsg-fact"><b>Who</b><span>Owner, Manager</span></div>
+        <div class="rsg-fact"><b>Before you start</b><span>Have your real address, phone, GSTIN and FSSAI number ready. Don't type made-up numbers.</span></div>
+        <div class="rsg-fact"><b>Where</b><span>Dashboard → <b>Setup</b> → <b>Outlet Settings</b></span></div>
+    </div>
+    <ol class="rsg-steps">
+        <li>Open <b>Setup</b> from the Dashboard and press the <b>Outlet Settings</b> card.</li>
+        <li>Fill in <span class="rsg-ui">Outlet / Branch Name</span> (<span class="rsg-eg">Main Branch</span>), <span class="rsg-ui">Full Address</span>, <span class="rsg-ui">Phone Number</span>, <span class="rsg-ui">WhatsApp Number</span> and <span class="rsg-ui">Email Address</span>.</li>
+        <li>Type your real <span class="rsg-ui">GSTIN</span> and <span class="rsg-ui">FSSAI License No.</span> Leave <span class="rsg-ui">SAC Code</span> as <span class="rsg-eg">996331</span> unless your accountant says otherwise.</li>
+        <li>Choose <span class="rsg-ui">GST Pricing Mode</span>: <b>GST Exclusive</b> (menu price + GST at billing) or <b>GST Inclusive</b> (menu price already includes GST).</li>
+        <li>Optional: <span class="rsg-ui">Staff Discount Limit</span> in % (<span class="rsg-eg">10</span>), <span class="rsg-ui">Parcel / Takeaway Charge</span> (<span class="rsg-eg">20</span>) and its GST rate.</li>
+        <li>Set <span class="rsg-ui">Opening Time</span> and <span class="rsg-ui">Closing Time</span> (<span class="rsg-eg">11:00</span> and <span class="rsg-eg">23:30</span>). Late-night sales after midnight still count in the same business day.</li>
+        <li>Press <span class="rsg-ui">Save Outlet Details</span>.</li>
+    </ol>
+    <div class="rsg-outcome">
+        <div class="res"><b>Result</b>New bills print the new details. The Setup page shows "GSTIN Set" once a GSTIN is saved.</div>
+        <div class="nxt"><b>Next</b>Add your <button type="button" class="btn btn-link p-0 align-baseline" data-goto="menu">menu</button>.</div>
+    </div>
+    <div class="rsg-callout warn"><p><b>GST:</b> bills charge GST only after a valid GSTIN is saved here. Until then, bills show no GST. Ask your accountant about GST rates, composition scheme and union-territory settings before changing them.</p></div>
+    <details class="rsg-more"><summary>Other settings on this page</summary><div>
+        <ul>
+            <li><b>Restaurant logo</b>: <span class="rsg-ui">Upload New Logo</span> here, or <span class="rsg-ui">Upload Logo</span> on the Setup page.</li>
+            <li><b>Bill Number Code</b>: short letters at the start of bill numbers (<span class="rsg-eg">RS</span>).</li>
+            <li><b>Composition Scheme</b>, <b>Union Territory</b>, <b>Counter Billing Mode</b>, <b>Central Kitchen</b>, <b>Purchase Order Emails</b>: switch on only if they apply to your business.</li>
+            <li>The restaurant's brand name is changed by the software administrator.</li>
+        </ul>
+    </div></details>
+    <div class="rsg-actions"><a class="rsg-btn rsg-btn-gold" href="/setup/outlet/"><i class="bi bi-box-arrow-up-right"></i> Open Feature: Outlet Settings</a></div>
+</section>
+
+<section class="rsg-section" id="g-menu" data-group="Restaurant setup" data-title="Menu: categories, dishes, prices, photos"
+         data-roles="manager" data-keywords="menu dish item category price photo image picture availability available sold out veg non-veg prep time recipe gst rates edit remove">
+    <h2>Menu: categories, dishes, prices, photos</h2>
+    <p class="rsg-lead">The menu is what staff tap on the billing screen and what guests see on the QR menu. Each dish has a category, price, veg/non-veg mark, kitchen station and an optional photo.</p>
+    <div class="rsg-facts">
+        <div class="rsg-fact"><b>Who</b><span>Owner, Manager</span></div>
+        <div class="rsg-fact"><b>Before you start</b><span>Create <button type="button" class="btn btn-link p-0 align-baseline" data-goto="stations">kitchen stations</button> first, so you can pick a station for each dish.</span></div>
+        <div class="rsg-fact"><b>Where</b><span>Dashboard → <b>Menu</b></span></div>
+    </div>
+
+    <h3>Add a category</h3>
+    <ol class="rsg-steps">
+        <li>On the Menu screen press <span class="rsg-ui">Category</span>.</li>
+        <li>In <span class="rsg-ui">Identifier</span> type the category name, for example <span class="rsg-eg">Veg Starters</span>.</li>
+        <li>Press <span class="rsg-ui">Establish Category</span>. The new category appears as a heading.</li>
+    </ol>
+
+    <h3>Add a dish</h3>
+    <ol class="rsg-steps">
+        <li>Press <span class="rsg-ui">Add Item</span>.</li>
+        <li><span class="rsg-ui">Dish Name</span>: <span class="rsg-eg">Paneer Tikka</span>. <span class="rsg-ui">Standard Pricing (₹)</span>: <span class="rsg-eg">260</span>.</li>
+        <li><span class="rsg-ui">Description</span>: one short line guests understand, <span class="rsg-eg">Cottage cheese cubes grilled in the tandoor</span>.</li>
+        <li><span class="rsg-ui">Item Image (Optional)</span>: choose a JPG or PNG photo of the dish.</li>
+        <li>Choose the <span class="rsg-ui">Classification</span> (category) and the <span class="rsg-ui">Preparation Station</span> (<span class="rsg-eg">Tandoor</span>).</li>
+        <li>Optional: <span class="rsg-ui">Est. Prep Time (minutes)</span> <span class="rsg-eg">15</span>, and a <span class="rsg-ui">Parcel Charge for this item (₹)</span> (0 uses the outlet's charge).</li>
+        <li>Choose <span class="rsg-ui">Veg</span> or <span class="rsg-ui">Non-Veg</span>.</li>
+        <li>Press <span class="rsg-ui">Add to Collection</span>.</li>
+    </ol>
+    <div class="rsg-outcome">
+        <div class="res"><b>Result</b>The dish shows under its category, and on the billing screen straight away.</div>
+        <div class="nxt"><b>Next</b>{% if 'inventory' in tenant_features %}Add its recipe so stock goes down when it's cooked (below), then {% endif %}{% if 'floor_plan' in tenant_features %}set up <button type="button" class="btn btn-link p-0 align-baseline" data-goto="tables">tables</button>{% else %}set up <button type="button" class="btn btn-link p-0 align-baseline" data-goto="stations">kitchen stations</button>{% endif %}.</div>
+    </div>
+
+    <h3>Change price or photo, mark sold out, remove</h3>
+    <ul>
+        <li><b>Change price, name, photo or station</b>: press the <span class="rsg-ui">Edit Item</span> (pencil) icon on the dish, change it, and save.</li>
+        <li><b>Sold out today</b>: press the <span class="rsg-ui">Toggle Available</span> icon. An unavailable dish disappears from the billing screen until you switch it back. Use this instead of deleting.</li>
+        <li><b>Remove for good</b>: the <span class="rsg-ui">Remove Item</span> icon. Old bills keep their dishes.</li>
+        <li><b>Find a dish</b>: type in <span class="rsg-ui">Search menu items by name...</span></li>
+        <li><b>GST rates per dish/category</b>: the <span class="rsg-ui">GST Rates</span> link at the top of the Menu screen.</li>
+        {% if 'modifiers' in tenant_features %}<li><b>Add-ons</b> (extra cheese, spice level): the <span class="rsg-ui">Modifiers</span> link.</li>{% endif %}
+    </ul>
+    {% if 'inventory' in tenant_features %}
+    <details class="rsg-more"><summary>Recipes: link a dish to its ingredients</summary><div>
+        <ol class="rsg-steps">
+            <li>Make sure the ingredients exist in <button type="button" class="btn btn-link p-0 align-baseline" data-goto="inventory">Inventory</button>.</li>
+            <li>On the dish press <span class="rsg-ui">View Recipe</span>.</li>
+            <li>Pick the <span class="rsg-ui">Ingredient Selection</span> and type the <span class="rsg-ui">Quantity Measurement</span> for ONE portion, in the ingredient's unit (<span class="rsg-eg">0.15</span> kg paneer).</li>
+            <li>Press <span class="rsg-ui">Integrate Ingredient</span>. Repeat for each ingredient.</li>
+        </ol>
+        <p>When a kitchen ticket (KOT) is created for the dish, these quantities are taken out of stock automatically.</p>
+    </div></details>
+    {% endif %}
+    <details class="rsg-more"><summary>Common problems</summary><div>
+        <ul>
+            <li><b>A dish is missing on the billing screen</b>: it's switched off with Toggle Available, or its category is inactive.</li>
+            <li><b>Photo won't upload</b>: use a JPG/PNG smaller than a few MB.</li>
+            <li><b>AI Import</b> needs an AI service key set up by your technician. If it isn't set up, add dishes by hand.</li>
+        </ul>
+    </div></details>
+    <div class="rsg-actions">
+        <a class="rsg-btn rsg-btn-gold" href="/menu/"><i class="bi bi-box-arrow-up-right"></i> Open Feature: Menu</a>
+        <button type="button" class="rsg-btn" data-tour-start="menu"><i class="bi bi-signpost-split"></i> Start walkthrough</button>
+    </div>
+    <script type="application/json" class="rsg-tour" data-tour="menu" data-title="Menu walkthrough" data-path="^/menu/$" data-start="/menu/">
+    [
+      {"title": "Find a dish", "sel": "#menuManagementSearch", "text": "Type part of a dish name to jump to it."},
+      {"title": "Add a category", "sel": "button", "has": "Category", "text": "Press Category to add a heading such as Veg Starters. This walkthrough won't press it for you."},
+      {"title": "Add a dish", "sel": "button", "has": "Add Item", "text": "Press Add Item, fill in name, price, photo, category, station and Veg/Non-Veg, then Add to Collection."},
+      {"title": "Edit a dish", "sel": "[title='Edit Item']", "text": "The pencil changes price, photo, description or station."},
+      {"title": "Sold out today", "sel": "[title='Toggle Available']", "text": "Switch a dish off when it's sold out. It disappears from billing until you switch it back."},
+      {"title": "Recipe", "sel": "[title='View Recipe']", "text": "Link ingredients so stock goes down when the dish is sent to the kitchen."}
+    ]
+    </script>
+</section>
+
+{% if 'floor_plan' in tenant_features %}
+<section class="rsg-section" id="g-tables" data-group="Restaurant setup" data-title="Tables, sections and table QR codes"
+         data-roles="manager" data-keywords="tables floor plan section rename add table qr code print combine merge transfer">
+    <h2>Tables, sections and table QR codes</h2>
+    <p class="rsg-lead">Tables appear as cards on the floor plan. Staff tap a table to start its order.</p>
+    <div class="rsg-facts">
+        <div class="rsg-fact"><b>Who</b><span>Owner, Manager</span></div>
+        <div class="rsg-fact"><b>Where</b><span>Setup → <b>Tables</b>, or the <span class="rsg-ui">Tables</span> button on the floor plan</span></div>
+    </div>
+    <h3>Quick: add several tables at once</h3>
+    <ol class="rsg-steps">
+        <li>Setup → <b>Tables</b>.</li>
+        <li>In <span class="rsg-ui">How many tables?</span> type a number (<span class="rsg-eg">4</span>) and press <span class="rsg-ui">Add Tables</span>.</li>
+        <li>Click a table's name to rename it (<span class="rsg-eg">Garden 1</span>).</li>
+    </ol>
+    <h3>Add one table with a section</h3>
+    <ol class="rsg-steps">
+        <li>Open the floor plan (Dashboard → <b>Tables</b>) and press the <span class="rsg-ui">Tables</span> button (gear icon) at the top.</li>
+        <li>Under <b>Add New Table</b> type the name (<span class="rsg-eg">T-12</span>) and section (<span class="rsg-eg">Family Hall</span>).</li>
+        <li>Press <span class="rsg-ui">Create</span>.</li>
+    </ol>
+    {% if 'qr_menu' in tenant_features %}
+    <h3>Print table QR codes (guest self-ordering)</h3>
+    <ol class="rsg-steps">
+        <li>Dashboard → <b>Table QR Codes</b>.</li>
+        <li>Press <span class="rsg-ui">Print All</span> and stick each code on its table. Each code only orders onto its own table.</li>
+    </ol>
+    {% endif %}
+    <div class="rsg-outcome">
+        <div class="res"><b>Result</b>The floor plan shows every table as <b>Free</b>.</div>
+        <div class="nxt"><b>Next</b>Set up <button type="button" class="btn btn-link p-0 align-baseline" data-goto="stations">kitchen stations</button>.</div>
+    </div>
+    <div class="rsg-actions">
+        <a class="rsg-btn rsg-btn-gold" href="/setup/tables/"><i class="bi bi-box-arrow-up-right"></i> Open Feature: Setup Tables</a>
+        <a class="rsg-btn" href="/tables/"><i class="bi bi-grid-3x3-gap"></i> Floor plan</a>
+        {% if 'qr_menu' in tenant_features %}<a class="rsg-btn" href="/setup/qr-codes/"><i class="bi bi-qr-code"></i> Table QR Codes</a>{% endif %}
+    </div>
+</section>
+{% endif %}
+
+<section class="rsg-section" id="g-stations" data-group="Restaurant setup" data-title="Kitchen stations"
+         data-roles="manager" data-keywords="kitchen station tandoor bar dessert kot printer">
+    <h2>Kitchen stations</h2>
+    <p class="rsg-lead">A station is a part of the kitchen (Main Kitchen, Tandoor, Bar, Desserts). Each dish goes to one station, so each station gets its own kitchen ticket (KOT).</p>
+    <div class="rsg-facts">
+        <div class="rsg-fact"><b>Who</b><span>Owner, Manager</span></div>
+        <div class="rsg-fact"><b>Where</b><span>Setup → <b>Kitchen Stations</b></span></div>
+    </div>
+    <ol class="rsg-steps">
+        <li>Setup → <b>Kitchen Stations</b>.</li>
+        <li>In <span class="rsg-ui">Station Name</span> type <span class="rsg-eg">Tandoor</span> and press <span class="rsg-ui">Add Station</span>. Repeat for each station.</li>
+        <li>Optional: give a station its own printer address so its tickets print there.</li>
+        <li>In <b>Menu</b>, set each dish's <span class="rsg-ui">Preparation Station</span>.</li>
+    </ol>
+    <div class="rsg-outcome">
+        <div class="res"><b>Result</b>{% if 'kitchen_display' in tenant_features %}The kitchen screen shows a tab for each station.{% else %}Each station gets its own ticket.{% endif %}</div>
+        <div class="nxt"><b>Next</b><button type="button" class="btn btn-link p-0 align-baseline" data-goto="staff">Create staff logins</button>.</div>
+    </div>
+    <div class="rsg-actions"><a class="rsg-btn rsg-btn-gold" href="/setup/kitchen-stations/"><i class="bi bi-box-arrow-up-right"></i> Open Feature: Kitchen Stations</a></div>
+</section>
+
+<section class="rsg-section" id="g-staff" data-group="Restaurant setup" data-title="Staff accounts and roles"
+         data-roles="manager" data-keywords="staff user account login password reset role waiter cashier chef captain manager deactivate pay rate">
+    <h2>Staff accounts and roles</h2>
+    <p class="rsg-lead">Give every person their own login with the right role. The role decides which screens and buttons they get.</p>
+    <div class="rsg-facts">
+        <div class="rsg-fact"><b>Who</b><span>Owner, Manager (owner accounts can't be created or changed here)</span></div>
+        <div class="rsg-fact"><b>Where</b><span>Setup → <b>Staff Accounts</b></span></div>
+    </div>
+    <div class="rsg-table-wrap"><table class="rsg-table">
+        <thead><tr><th>Role</th><th>Main work</th></tr></thead>
+        <tbody>
+            <tr><td>Manager</td><td>Everything in the restaurant except owner-only items (approving refunds, online-order setup, report emails).</td></tr>
+            <tr><td>Cashier</td><td>Orders, bills, discounts, cash/card payments, confirming UPI payments, customers, bookings.</td></tr>
+            <tr><td>Captain</td><td>Orders at tables, bills, discounts, cash/card payments, bookings. Cannot confirm UPI.</td></tr>
+            <tr><td>Waiter</td><td>Orders at tables, sending to kitchen, serving, guest calls, making the bill. No payments.</td></tr>
+            <tr><td>Chef / Kitchen Staff</td><td>Kitchen screen: start and finish dishes.</td></tr>
+        </tbody>
+    </table></div>
+    <ol class="rsg-steps">
+        <li>Setup → <b>Staff Accounts</b>.</li>
+        <li><span class="rsg-ui">Username</span>: lowercase, no spaces (<span class="rsg-eg">ravi_waiter</span>).</li>
+        <li><span class="rsg-ui">Password</span>: at least 8 characters. Give it to the person privately.</li>
+        <li>Choose the <span class="rsg-ui">Role</span> and <span class="rsg-ui">Outlet</span>, then press <span class="rsg-ui">Create Account</span>.</li>
+    </ol>
+    <div class="rsg-outcome">
+        <div class="res"><b>Result</b>The person appears in <b>Current Team</b> and can log in straight away.</div>
+        <div class="nxt"><b>Next</b>Set up <button type="button" class="btn btn-link p-0 align-baseline" data-goto="payment-setup">payment methods</button>.</div>
+    </div>
+    <h3>Change or remove someone</h3>
+    <ul>
+        <li><span class="rsg-ui">Edit Role</span>, <span class="rsg-ui">Edit Location</span>, <span class="rsg-ui">Edit Pay Rate</span>: change role, outlet or hourly pay.</li>
+        <li><span class="rsg-ui">Reset Password</span>: type a new password (8+ characters). This also unlocks a locked-out account.</li>
+        <li><span class="rsg-ui">Deactivate</span>: blocks login at once but keeps all their past orders. <span class="rsg-ui">Reactivate</span> undoes it. Tick <span class="rsg-ui">Show inactive</span> to see former staff.</li>
+    </ul>
+    <div class="rsg-actions"><a class="rsg-btn rsg-btn-gold" href="/setup/staff/"><i class="bi bi-box-arrow-up-right"></i> Open Feature: Staff Accounts</a></div>
+</section>
+
+<section class="rsg-section" id="g-payment-setup" data-group="Restaurant setup" data-title="Payment methods and the PhonePe/UPI QR"
+         data-roles="manager" data-keywords="payment methods cash upi card qr phonepe gpay upload replace payee razorpay label">
+    <h2>Payment methods and the PhonePe/UPI QR</h2>
+    <p class="rsg-lead">Choose which payment buttons appear on the bill, and upload the QR code guests scan to pay by UPI.</p>
+    <div class="rsg-facts">
+        <div class="rsg-fact"><b>Who</b><span>Owner, Manager</span></div>
+        <div class="rsg-fact"><b>Before you start</b><span>A clear photo or download of your shop's PhonePe/UPI QR, and its UPI ID</span></div>
+        <div class="rsg-fact"><b>Where</b><span>Setup → <b>Payment Methods</b></span></div>
+    </div>
+    <ol class="rsg-steps">
+        <li>Setup → <b>Payment Methods</b>.</li>
+        <li>Tick the methods you accept (Cash, UPI, Card). Change the label if you like (<span class="rsg-eg">PhonePe</span>).</li>
+        <li>Type your <b>UPI ID</b> (<span class="rsg-eg">yourshop@ybl</span>). It must be the same account as the QR.</li>
+        <li>Under the QR, choose your QR image file to upload or replace it. Tick <span class="rsg-ui">Remove the current QR</span> to delete it.</li>
+        <li>Type the payee name guests should see in their UPI app.</li>
+        <li>Press <span class="rsg-ui">Save Configuration</span>.</li>
+    </ol>
+    <div class="rsg-outcome">
+        <div class="res"><b>Result</b>The bill page shows your payment buttons, and the QR appears on bills, the guest bill link and printed receipts while money is due.</div>
+        <div class="nxt"><b>Next</b>Test it: make a ₹1 test bill, scan the QR with a phone and check the payee name and UPI ID before real use.</div>
+    </div>
+    <div class="rsg-callout warn"><p><b>A QR on the screen is not a payment.</b> Guests scanning the QR, or pressing "I have paid", never marks a bill paid. A cashier, manager or owner must check the money in the PhonePe/bank app and type the transaction reference. See <button type="button" class="btn btn-link p-0 align-baseline" data-goto="upi">UPI/QR payments</button>.</p></div>
+    <details class="rsg-more"><summary>Razorpay (automatic confirmation)</summary><div>
+        <p>The Razorpay fields are for an online payment gateway that confirms payments by itself. They need a Razorpay account, live keys and a public HTTPS web address. Leave them empty unless your technician has set this up.</p>
+    </div></details>
+    <div class="rsg-actions">
+        <a class="rsg-btn rsg-btn-gold" href="/setup/payment-methods/"><i class="bi bi-box-arrow-up-right"></i> Open Feature: Payment Methods</a>
+        <button type="button" class="rsg-btn" data-tour-start="payment-setup"><i class="bi bi-signpost-split"></i> Start walkthrough</button>
+    </div>
+    <script type="application/json" class="rsg-tour" data-tour="payment-setup" data-title="Payment setup walkthrough" data-path="^/setup/payment-methods/$" data-start="/setup/payment-methods/">
+    [
+      {"title": "Methods", "sel": "input[name='methods']", "text": "Tick each payment method you accept. Unticked methods have no button on the bill."},
+      {"title": "UPI ID", "sel": "input[name='upi_id']", "text": "The UPI ID of the account your QR pays into."},
+      {"title": "QR image", "sel": "input[name='upi_qr_image']", "text": "Choose your PhonePe/UPI QR picture to upload or replace it. It is stored exactly as uploaded."},
+      {"title": "Payee name", "sel": "input[name='upi_payee_name']", "text": "The name guests see in their UPI app, so they know they are paying the right shop."},
+      {"title": "Save", "sel": "button", "has": "Save Configuration", "text": "Nothing changes until you press Save Configuration yourself."}
+    ]
+    </script>
+</section>
+
+<section class="rsg-section" id="g-printers" data-group="Restaurant setup" data-title="Printers"
+         data-roles="manager" data-keywords="printer print receipt kot thermal ip address test print">
+    <h2>Printers</h2>
+    <p class="rsg-lead">Bills and kitchen tickets can print on a network thermal printer. Without one, use the browser's print window.</p>
+    <div class="rsg-facts">
+        <div class="rsg-fact"><b>Who</b><span>Owner, Manager</span></div>
+        <div class="rsg-fact"><b>Before you start</b><span>Printer connected to the same network, and its IP address (printed on its self-test slip)</span></div>
+        <div class="rsg-fact"><b>Where</b><span>Kitchen Stations page → printer setup (<a href="/setup/printer/">/setup/printer/</a>)</span></div>
+    </div>
+    <ol class="rsg-steps">
+        <li>Open the printer setup page.</li>
+        <li>Type the printer's IP address (<span class="rsg-eg">192.168.1.100</span>), <span class="rsg-ui">Printer port</span> (<span class="rsg-eg">9100</span>) and, if you know it, the <span class="rsg-ui">MAC address</span>.</li>
+        <li>Press <span class="rsg-ui">Save</span>, then <span class="rsg-ui">Test Print</span>.</li>
+    </ol>
+    <div class="rsg-outcome">
+        <div class="res"><b>Result</b>A test slip prints. If not, check the cable/Wi-Fi and the IP address.</div>
+        <div class="nxt"><b>Next</b>Use <span class="rsg-ui">Thermal Print</span> or <span class="rsg-ui">Print Bill</span> on a bill to check the layout.</div>
+    </div>
+    <div class="rsg-callout"><p>Network printing needs the printing helper app running on a phone or PC at the restaurant. If it can't reach the printer, the browser's print window opens instead. Real printers have not been tested with this installation, so test yours before opening.</p></div>
+    <div class="rsg-actions"><a class="rsg-btn rsg-btn-gold" href="/setup/printer/"><i class="bi bi-box-arrow-up-right"></i> Open Feature: Printer Setup</a></div>
+</section>
+
+<section class="rsg-section" id="g-promos" data-group="Restaurant setup" data-title="Promos{% if 'offers' in tenant_features %} and offers{% endif %}"
+         data-roles="manager" data-keywords="promo campaign code discount offer happy hour buy get free">
+    <h2>Promos{% if 'offers' in tenant_features %} and offers{% endif %}</h2>
+    <p class="rsg-lead">A <b>promo</b> is a discount staff pick on the bill (<span class="rsg-eg">Happy Hours 20%</span>).{% if 'offers' in tenant_features %} An <b>offer</b> applies itself automatically by rule (buy 2 get 1 free, % off at set hours).{% endif %}</p>
+    <div class="rsg-facts">
+        <div class="rsg-fact"><b>Who</b><span>Owner, Manager</span></div>
+        <div class="rsg-fact"><b>Where</b><span>Outlet Settings → <span class="rsg-ui">Go to Promo Dashboard</span> (<a href="/setup/promos/">/setup/promos/</a>){% if 'offers' in tenant_features %}; Setup → <b>Offers</b>{% endif %}</span></div>
+    </div>
+    <h3>Create a promo</h3>
+    <ol class="rsg-steps">
+        <li>Open <b>Promo Campaigns</b>.</li>
+        <li><span class="rsg-ui">Campaign Name *</span>: <span class="rsg-eg">Weekday Lunch 10%</span>. <span class="rsg-ui">Promo Code (optional)</span>: <span class="rsg-eg">LUNCH10</span>.</li>
+        <li><span class="rsg-ui">Type *</span>: % Off or ₹ Flat Off. <span class="rsg-ui">Value *</span>: <span class="rsg-eg">10</span>.</li>
+        <li>Optional: <span class="rsg-ui">Min. Order Value</span>, <span class="rsg-ui">Max Uses</span>, <span class="rsg-ui">Valid From</span>/<span class="rsg-ui">Valid Until</span>, staff notes.</li>
+        <li>Press <span class="rsg-ui">Create Campaign</span>. Pause or delete it from the list later.</li>
+    </ol>
+    {% if 'offers' in tenant_features %}
+    <h3>Create an automatic offer</h3>
+    <ol class="rsg-steps">
+        <li>Setup → <b>Offers</b>.</li>
+        <li>Choose a kind: <span class="rsg-ui">Buy N, get free</span>, <span class="rsg-ui">Happy hour</span>, <span class="rsg-ui">% off</span> or <span class="rsg-ui">₹ off each</span>.</li>
+        <li>Type the name the bill shows, pick the dishes or categories, days and times.</li>
+        <li>Press <span class="rsg-ui">Save offer</span>. Use <span class="rsg-ui">Pause all</span> to stop every offer at once.</li>
+    </ol>
+    {% endif %}
+    <div class="rsg-outcome">
+        <div class="res"><b>Result</b>Promos appear in <span class="rsg-ui">Select a promo…</span> on the bill.{% if 'offers' in tenant_features %} Offers apply to matching dishes by themselves.{% endif %}</div>
+        <div class="nxt"><b>Next</b>Learn <button type="button" class="btn btn-link p-0 align-baseline" data-goto="bill">how discounts work on a bill</button>.</div>
+    </div>
+    <div class="rsg-actions">
+        <a class="rsg-btn rsg-btn-gold" href="/setup/promos/"><i class="bi bi-box-arrow-up-right"></i> Open Feature: Promos</a>
+        {% if 'offers' in tenant_features %}<a class="rsg-btn" href="/setup/offers/"><i class="bi bi-stars"></i> Offers</a>{% endif %}
+    </div>
+</section>
+
+{% if role == "owner" %}
+<section class="rsg-section" id="g-aggregators" data-group="Restaurant setup" data-title="Online orders (Zomato, Swiggy)"
+         data-roles="" data-admin-only="1" data-keywords="zomato swiggy online delivery aggregator integration webhook">
+    <h2>Online orders (Zomato, Swiggy)</h2>
+    <p class="rsg-lead">Delivery-app orders can be typed on the billing screen by choosing <b>Zomato</b> or <b>Swiggy</b> as the order type. Receiving them automatically needs a partner integration.</p>
+    <div class="rsg-facts">
+        <div class="rsg-fact"><b>Who</b><span>Owner only</span></div>
+        <div class="rsg-fact"><b>Where</b><span>Setup → <b>Online Integrations</b>{% if 'platform_sync' in tenant_features %}; the Zomato/Swiggy buttons at the top of the Dashboard turn each app on or off{% endif %}</span></div>
+    </div>
+    <div class="rsg-callout warn"><p>Automatic order import needs accounts and webhook details from the delivery companies and a public web address. That isn't set up in this local installation, so type delivery orders by hand: see <button type="button" class="btn btn-link p-0 align-baseline" data-goto="takeaway">Takeaway and delivery</button>.</p></div>
+    <div class="rsg-actions"><a class="rsg-btn rsg-btn-gold" href="/setup/aggregators/"><i class="bi bi-box-arrow-up-right"></i> Open Feature: Online Integrations</a></div>
+</section>
+{% endif %}
+
+{% endif %}{# owner/manager setup #}
+
+{# ============================== DAILY OPERATIONS ============================== #}
+
+{% if role in "owner,manager,cashier,captain" %}
+<section class="rsg-section" id="g-register" data-group="Daily operations" data-title="Open the cash register"
+         data-roles="manager,cashier,captain" data-keywords="cash register session open float drawer start of day">
+    <h2>Open the cash register</h2>
+    <p class="rsg-lead">Before the first payment of the day, open a cash register session with the cash already in the drawer (the "float"). Payments can't be recorded without an open register.</p>
+    <div class="rsg-facts">
+        <div class="rsg-fact"><b>Who</b><span>Owner, Manager (Cash Register page); Cashier and Captain can open it from a bill when asked</span></div>
+        <div class="rsg-fact"><b>Before you start</b><span>Count the cash in the drawer</span></div>
+    </div>
+    {% if role in "owner,manager" %}
+    <h3>From the Cash Register page</h3>
+    <ol class="rsg-steps">
+        <li>Dashboard → <b>Cash Register</b>.</li>
+        <li>Press <span class="rsg-ui">Open Register</span>.</li>
+        <li>In <span class="rsg-ui">Opening Cash Balance (Starting Float)</span> type the counted cash (<span class="rsg-eg">2000</span>).</li>
+        <li>Press <span class="rsg-ui">Start Session</span>.</li>
+    </ol>
+    {% endif %}
+    <h3>From a bill</h3>
+    <ol class="rsg-steps">
+        <li>When you take a payment and no register is open, the POS asks <i>"No cash register is open for this outlet. Open it now to take payment?"</i></li>
+        <li>Press <b>OK</b>, type the counted float (<span class="rsg-eg">2000</span>) and press <b>OK</b>.</li>
+        <li>The register opens and the same payment is tried again.</li>
+    </ol>
+    <div class="rsg-outcome">
+        <div class="res"><b>Result</b>Payments are recorded in today's session.</div>
+        <div class="nxt"><b>Next</b>Start taking <button type="button" class="btn btn-link p-0 align-baseline" data-goto="{% if 'floor_plan' in tenant_features %}dine-in{% else %}takeaway{% endif %}">orders</button>.</div>
+    </div>
+    {% if role in "owner,manager" %}
+    <div class="rsg-actions">
+        <a class="rsg-btn rsg-btn-gold" href="/shifts/sessions/"><i class="bi bi-box-arrow-up-right"></i> Open Feature: Cash Register</a>
+        <button type="button" class="rsg-btn" data-tour-start="register"><i class="bi bi-signpost-split"></i> Start walkthrough</button>
+    </div>
+    <script type="application/json" class="rsg-tour" data-tour="register" data-title="Cash register walkthrough" data-path="^/shifts/sessions/$" data-start="/shifts/sessions/">
+    [
+      {"title": "Open the register", "sel": "button", "has": "Open Register", "text": "Start of day: press Open Register and type the cash already in the drawer.", "missing": "A register is already open, so this button is hidden until it is closed."},
+      {"title": "Close the register", "sel": "button", "has": "Close Register", "text": "End of day: count the drawer, press Close Register, type the counted cash and Finalize & Reconcile.", "missing": "No register is open right now."},
+      {"title": "Past sessions", "sel": "table", "text": "Each row shows cash sales and any difference (Discrepancy) between expected and counted cash."},
+      {"title": "Z-Report", "sel": "a", "has": "Z-Report", "text": "The end-of-day report for the till."}
+    ]
+    </script>
+    {% endif %}
+</section>
+{% endif %}
+
+{% if role in "owner,manager,cashier,captain,waiter" and 'floor_plan' in tenant_features %}
+<section class="rsg-section" id="g-dine-in" data-group="Daily operations" data-title="Take a dine-in order"
+         data-roles="manager,cashier,captain,waiter" data-keywords="dine in table order new order add items dispatch send kitchen kot note">
+    <h2>Take a dine-in order</h2>
+    <p class="rsg-lead">Pick the table, add dishes, and press <span class="rsg-ui">Dispatch</span>. That saves the order and sends a kitchen ticket (KOT) to each station.</p>
+    <div class="rsg-facts">
+        <div class="rsg-fact"><b>Who</b><span>Owner, Manager, Cashier, Captain, Waiter</span></div>
+        <div class="rsg-fact"><b>Before you start</b><span>Menu and tables are set up</span></div>
+        <div class="rsg-fact"><b>Where</b><span>Dashboard/Tables → tap the table</span></div>
+    </div>
+    <ol class="rsg-steps">
+        <li>Open <b>Tables</b>. Free tables show <span class="rsg-ui">New Order</span>.</li>
+        <li>Tap <span class="rsg-ui">New Order</span> on the guests' table (<span class="rsg-eg">T-5</span>). The billing screen opens with that table chosen.</li>
+        <li>Tap a dish card, or type in <span class="rsg-ui">Search the menu...</span>. A small window opens.</li>
+        <li>Optional: type a kitchen note (<span class="rsg-eg">less spicy</span>) or tick <span class="rsg-ui">Pack as Takeaway</span>. Press <span class="rsg-ui">Add to Order</span>.</li>
+        <li>Change quantity with <b>+</b> and <b>−</b> in the order list on the right (on a phone: the cart button at the bottom).</li>
+        <li>Check the table and the order type (<b>Dine-in</b>) at the top of the order list.</li>
+        <li>Press <span class="rsg-ui">Dispatch</span>. You see "Order Sent".</li>
+    </ol>
+    <div class="rsg-outcome">
+        <div class="res"><b>Result</b>The kitchen gets a ticket per station, stock for linked recipes goes down, and the table card turns busy with a timer.</div>
+        <div class="nxt"><b>Next</b>For more dishes later, tap <span class="rsg-ui">Add</span> on the table, add them and press <span class="rsg-ui">Dispatch</span> again. Then <button type="button" class="btn btn-link p-0 align-baseline" data-goto="tracking">follow the kitchen status</button>.</div>
+    </div>
+    <h3>Table card buttons</h3>
+    <div class="rsg-table-wrap"><table class="rsg-table">
+        <thead><tr><th>Button</th><th>What it does</th></tr></thead>
+        <tbody>
+            <tr><td><span class="rsg-ui">New Order</span></td><td>Start an order on a free table.</td></tr>
+            <tr><td><span class="rsg-ui">Add</span></td><td>Add more dishes to the running order.</td></tr>
+            <tr><td><span class="rsg-ui">Bill</span></td><td>Make the bill (see <button type="button" class="btn btn-link p-0 align-baseline" data-goto="bill">Make the bill</button>).</td></tr>
+            <tr><td><span class="rsg-ui">More</span></td><td>Pay bill, add items{% if 'running_order' in tenant_features %}, <span class="rsg-ui">Review Items Individually</span> (serve, cancel){% endif %}.</td></tr>
+            <tr><td><span class="rsg-ui">Pay Bill</span></td><td>Shown after the bill is made: opens the payment page.</td></tr>
+            <tr><td><span class="rsg-ui">Mark Clean</span></td><td>After guests leave, when the table is ready again.</td></tr>
+            {% if 'qr_menu' in tenant_features %}<tr><td><span class="rsg-ui">Approve QR</span></td><td>Guests ordered from the table QR. Check, then <span class="rsg-ui">Approve All Items</span> to send it to the kitchen.</td></tr>{% endif %}
+        </tbody>
+    </table></div>
+    <details class="rsg-more"><summary>Move or join tables</summary><div>
+        <ul>
+            <li><b>Move guests</b>: <span class="rsg-ui">Transfer</span> at the top of the floor plan → <span class="rsg-ui">Source Table</span>, <span class="rsg-ui">Destination (New) Table</span> → <span class="rsg-ui">Execute Transfer</span>.</li>
+            {% if 'merge_tables' in tenant_features %}<li><b>Join tables for a big group</b>: <span class="rsg-ui">Combine</span> → <span class="rsg-ui">Primary Table (Maintains Data)</span> and <span class="rsg-ui">Secondary Table (Will be merged)</span> → <span class="rsg-ui">Execute Merge</span>. <span class="rsg-ui">Unmerge</span> separates them.</li>{% endif %}
+        </ul>
+    </div></details>
+    <details class="rsg-more"><summary>Common problems</summary><div>
+        <ul>
+            <li><b>"Empty order."</b>: add a dish before pressing Dispatch.</li>
+            <li><b>Order is locked by another person</b>: someone else has the same table open. Ask them to close it, then reload.</li>
+            <li><b>Internet dropped</b>: the order is saved on this device and sent when the connection returns (you'll see a banner).</li>
+            <li><b>A dish is missing</b>: it's switched off as sold out. Ask a manager.</li>
+        </ul>
+    </div></details>
+    <div class="rsg-actions">
+        <a class="rsg-btn rsg-btn-gold" href="/tables/"><i class="bi bi-box-arrow-up-right"></i> Open Feature: Tables</a>
+        <button type="button" class="rsg-btn" data-tour-start="billing"><i class="bi bi-signpost-split"></i> Start walkthrough</button>
+    </div>
+    <script type="application/json" class="rsg-tour" data-tour="billing" data-title="Taking an order" data-path="^/billing/$" data-start="/billing/">
+    [
+      {"title": "Find a dish", "sel": "#menuSearch", "text": "Type part of a dish name, or scroll the categories."},
+      {"title": "Add a dish", "sel": ".menu-card", "text": "Tap a dish to open it, add a note if needed, then Add to Order. The walkthrough won't add anything for you."},
+      {"title": "Order settings", "sel": ".order-summary-bar", "text": "This bar shows the table and order type. Press it to change them.", "missing": "On a phone, open the order with the cart button at the bottom first."},
+      {"title": "Table and order type", "sel": "#sourceSelectDesktop", "text": "Choose the table (Walk-in means no table) and the type: Dine-in, Takeaway, Zomato, Swiggy and others.", "missing": "Press the order bar from the previous step to show these choices."},
+      {"title": "Send to kitchen", "sel": ".send-btn", "text": "Dispatch saves the order and sends kitchen tickets. Only press it when the order is right."},
+      {"title": "Make the bill", "sel": "button[onclick='generateBill()']", "text": "Bill creates the bill for the table's order when the guests are ready to pay."}
+    ]
+    </script>
+</section>
+{% endif %}
+
+{% if role in "owner,manager,cashier,captain,waiter" %}
+<section class="rsg-section" id="g-takeaway" data-group="Daily operations" data-title="Takeaway, delivery and counter orders"
+         data-roles="manager,cashier,captain,waiter" data-keywords="takeaway parcel delivery zomato swiggy walk-in counter token aggregator order id">
+    <h2>Takeaway, delivery and counter orders</h2>
+    <p class="rsg-lead">Orders without a table use the same billing screen. Choose the order type, add dishes and dispatch. The bill opens straight after.</p>
+    <div class="rsg-facts">
+        <div class="rsg-fact"><b>Who</b><span>Owner, Manager, Cashier, Captain, Waiter</span></div>
+        <div class="rsg-fact"><b>Where</b><span>Dashboard → <b>Billing</b> (or the Billing link on Tables)</span></div>
+    </div>
+    <ol class="rsg-steps">
+        <li>Open <b>Billing</b>. Leave the table on <b>Walk-in</b>.</li>
+        <li>Choose the order type: <b>Takeaway</b>, or <b>Zomato</b>/<b>Swiggy</b> for delivery apps.</li>
+        <li>For a delivery app, type its number in <span class="rsg-ui">Aggregator Order ID</span> (<span class="rsg-eg">ZMT-48213</span>).</li>
+        <li>Add the dishes.{% if request.user.outlet.parcel_charge_amount %} Press <span class="rsg-ui">Add Parcel</span> if packing is charged.{% endif %}</li>
+        <li>Press <span class="rsg-ui">Dispatch</span>.</li>
+    </ol>
+    <div class="rsg-outcome">
+        <div class="res"><b>Result</b>The kitchen gets the ticket and the bill page opens for payment.</div>
+        <div class="nxt"><b>Next</b>{% if role in "owner,manager,cashier,captain" %}<button type="button" class="btn btn-link p-0 align-baseline" data-goto="pay">Take the payment</button>.{% else %}Hand over to a cashier for payment.{% endif %}</div>
+    </div>
+    {% if 'token_system' in tenant_features %}
+    <details class="rsg-more"><summary>Token (counter queue) screen</summary><div>
+        <p>The <b>Tokens</b> screen (<a href="/token/">/token/</a>) gives counter orders a token number for calling out when food is ready. Start a token order there; the token number shows on the bill and kitchen ticket.</p>
+    </div></details>
+    {% endif %}
+    <div class="rsg-actions"><a class="rsg-btn rsg-btn-gold" href="/billing/"><i class="bi bi-box-arrow-up-right"></i> Open Feature: Billing</a></div>
+</section>
+{% endif %}
+
+{% if role in "owner,manager,chef,kitchen" and 'kitchen_display' in tenant_features %}
+<section class="rsg-section" id="g-kitchen" data-group="Daily operations" data-title="Kitchen screen (KOT)"
+         data-roles="manager,chef,kitchen" data-keywords="kitchen kds kot ticket start prep ready bump station clear">
+    <h2>Kitchen screen (KOT)</h2>
+    <p class="rsg-lead">Every dispatched order appears as a ticket (KOT). The kitchen marks each dish as it's started and finished, so the floor knows when to serve.</p>
+    <div class="rsg-facts">
+        <div class="rsg-fact"><b>Who</b><span>Owner, Manager, Chef, Kitchen Staff</span></div>
+        <div class="rsg-fact"><b>Where</b><span>Dashboard → <b>Kitchen</b> (chefs land here after login)</span></div>
+    </div>
+    <ol class="rsg-steps">
+        <li>Choose your station tab at the top, or <span class="rsg-ui">All Stations</span>.</li>
+        <li>When you begin cooking a dish press <span class="rsg-ui">Start Prep</span>. It turns "Cooking".</li>
+        <li>When it's ready press <span class="rsg-ui">Ready ✓</span>. Waiters see it as ready to serve.</li>
+        <li>To finish a whole ticket in one go press <span class="rsg-ui">BUMP — All Ready</span>.</li>
+    </ol>
+    <div class="rsg-outcome">
+        <div class="res"><b>Result</b>The table and Live Orders screens show the dish as Ready.</div>
+        <div class="nxt"><b>Next</b>The waiter serves it and marks it Served.</div>
+    </div>
+    <details class="rsg-more"><summary>Common problems</summary><div>
+        <ul>
+            <li><b>No tickets appear</b>: check the station tab; the screen refreshes by itself every few seconds.</li>
+            {% if role in "owner,manager" %}<li><b>Old tickets clutter the screen</b>: <span class="rsg-ui">Clear All</span> (owner/manager only) removes every ticket from the screen.</li>{% endif %}
+            <li><b>A dish was cancelled</b>: it disappears from the ticket. Ask the floor if unsure.</li>
+        </ul>
+    </div></details>
+    <div class="rsg-actions">
+        <a class="rsg-btn rsg-btn-gold" href="/kitchen/"><i class="bi bi-box-arrow-up-right"></i> Open Feature: Kitchen</a>
+        <button type="button" class="rsg-btn" data-tour-start="kitchen"><i class="bi bi-signpost-split"></i> Start walkthrough</button>
+    </div>
+    <script type="application/json" class="rsg-tour" data-tour="kitchen" data-title="Kitchen walkthrough" data-path="^/kitchen/$" data-start="/kitchen/">
+    [
+      {"title": "Stations", "sel": "#stationTabs", "text": "Pick your station to see only your dishes, or All Stations."},
+      {"title": "Tickets", "sel": "#orders", "text": "Each card is one kitchen ticket with its table or token and time."},
+      {"title": "Start a dish", "sel": ".btn-start", "text": "Press Start Prep when you begin cooking.", "missing": "No dish is waiting to be started right now."},
+      {"title": "Dish ready", "sel": ".btn-ready", "text": "Press Ready when it's done; the floor sees it straight away.", "missing": "No dish is cooking right now."},
+      {"title": "Whole ticket", "sel": ".btn-bump", "text": "BUMP marks every dish on the ticket ready.", "missing": "No open ticket right now."}
+    ]
+    </script>
+</section>
+{% endif %}
+
+{% if role in "owner,manager,cashier,captain,waiter" %}
+<section class="rsg-section" id="g-tracking" data-group="Daily operations" data-title="Follow orders and serve dishes"
+         data-roles="manager,cashier,captain,waiter" data-keywords="live orders status cooking ready served serve track running order">
+    <h2>Follow orders and serve dishes</h2>
+    <p class="rsg-lead">See every open order and where each dish is: Sent → Cooking → Ready → Served.</p>
+    <div class="rsg-facts">
+        <div class="rsg-fact"><b>Who</b><span>Owner, Manager, Cashier, Captain, Waiter</span></div>
+        <div class="rsg-fact"><b>Where</b><span>Dashboard/Tables → <b>Live Orders</b></span></div>
+    </div>
+    <ol class="rsg-steps">
+        <li>Open <b>Live Orders</b>. Filter with <span class="rsg-ui">Dine-in</span>, <span class="rsg-ui">Counter</span>, <span class="rsg-ui">Online</span> or <span class="rsg-ui">Attention</span>, or search a table, token or dish.</li>
+        {% if 'running_order' in tenant_features and 'floor_plan' in tenant_features %}
+        <li>When a dish shows <b>Ready</b>, take it to the table. Then on the floor plan tap the table's <span class="rsg-ui">More</span> → <span class="rsg-ui">Review Items Individually</span>.</li>
+        <li>Press <span class="rsg-ui">Serve</span> next to the dish.</li>
+        {% endif %}
+    </ol>
+    <div class="rsg-outcome">
+        <div class="res"><b>Result</b>The dish shows <b>Served</b>. Dishes still Ready when the bill is paid are marked served automatically.</div>
+        <div class="nxt"><b>Next</b>When guests ask for the bill: <button type="button" class="btn btn-link p-0 align-baseline" data-goto="bill">Make the bill</button>.</div>
+    </div>
+    <div class="rsg-actions"><a class="rsg-btn rsg-btn-gold" href="/live-orders/"><i class="bi bi-box-arrow-up-right"></i> Open Feature: Live Orders</a></div>
+</section>
+{% endif %}
+
+{% if role in "owner,manager,cashier,captain,waiter" and 'waiter_call' in tenant_features %}
+<section class="rsg-section" id="g-calls" data-group="Daily operations" data-title="Guest calls (Call Waiter)"
+         data-roles="manager,cashier,captain,waiter" data-keywords="call waiter guest request acknowledge resolved">
+    <h2>Guest calls</h2>
+    <p class="rsg-lead">Guests using the table QR menu can press <b>Call Waiter</b>. The call appears on the Calls screen.</p>
+    <ol class="rsg-steps">
+        <li>Dashboard → <b>Calls</b> (or <a href="/waiter-dashboard/">/waiter-dashboard/</a>).</li>
+        <li>Press <span class="rsg-ui">Acknowledge</span> when you're on your way.</li>
+        <li>Press <span class="rsg-ui">Mark Resolved</span> once you've helped the guest.</li>
+    </ol>
+    <div class="rsg-outcome"><div class="res"><b>Result</b>The call disappears; "Everything is Calm" shows when no calls are waiting.</div></div>
+    <div class="rsg-actions"><a class="rsg-btn rsg-btn-gold" href="/waiter-dashboard/"><i class="bi bi-box-arrow-up-right"></i> Open Feature: Calls</a></div>
+</section>
+{% endif %}
+
+{# ============================== BILLING & PAYMENT ============================== #}
+
+{% if role in "owner,manager,cashier,captain,waiter" %}
+<section class="rsg-section" id="g-bill" data-group="Billing &amp; payment" data-title="Make the bill{% if role in 'owner,manager,cashier,captain' %} and give discounts{% endif %}"
+         data-roles="manager,cashier,captain,waiter" data-keywords="bill generate invoice discount promo percent flat reason loyalty customer phone">
+    <h2>Make the bill{% if role in "owner,manager,cashier,captain" %} and give discounts{% endif %}</h2>
+    <p class="rsg-lead">Making the bill fixes the dishes and totals and gives a bill number. The bill page is also where payments are taken.</p>
+    <div class="rsg-facts">
+        <div class="rsg-fact"><b>Who</b><span>Make the bill: Owner, Manager, Cashier, Captain, Waiter. Discounts: Owner, Manager, Cashier, Captain.</span></div>
+        <div class="rsg-fact"><b>Before you start</b><span>All dishes for the table are dispatched</span></div>
+    </div>
+    <ol class="rsg-steps">
+        <li>On the floor plan press <span class="rsg-ui">Bill</span> on the table (or <span class="rsg-ui">Bill</span> under the order on the billing screen).</li>
+        <li>The bill page opens with each dish, taxes and <b>Balance Due</b>.</li>
+        <li>Check the dishes with the guest.</li>
+        {% if role in "owner,manager,cashier,captain" %}
+        <li><b>Discount (optional):</b> pick a promo in <span class="rsg-ui">Select a promo…</span>, or choose <b>% Off</b> or <b>₹ Flat</b>, type the value (<span class="rsg-eg">10</span>) and a <span class="rsg-ui">Reason</span> (<span class="rsg-eg">regular guest</span>), then press <span class="rsg-ui">Apply</span>. <span class="rsg-ui">Remove</span> takes it off.</li>
+        {% endif %}
+        <li>Press <span class="rsg-ui">Print Bill</span> or <span class="rsg-ui">Thermal Print</span> to give the guest a copy{% if role == "waiter" %} (if your login can print; otherwise ask the cashier){% endif %}.</li>
+    </ol>
+    <div class="rsg-outcome">
+        <div class="res"><b>Result</b>The table shows <b>Billing</b> and a <span class="rsg-ui">Pay Bill</span> button.</div>
+        <div class="nxt"><b>Next</b>{% if role in "owner,manager,cashier,captain" %}<button type="button" class="btn btn-link p-0 align-baseline" data-goto="pay">Take the payment</button>.{% else %}Tell the cashier or captain the table is ready to pay. If the guest wants to pay by UPI you can show them the QR: see <button type="button" class="btn btn-link p-0 align-baseline" data-goto="upi">UPI/QR</button>.{% endif %}</div>
+    </div>
+    {% if role in "owner,manager,cashier,captain" %}
+    <details class="rsg-more"><summary>Discount rules</summary><div>
+        <ul>
+            <li>A typed discount needs a reason; a promo doesn't.</li>
+            <li>The outlet may have a <b>Staff Discount Limit</b>. A bigger discount needs the owner.</li>
+            <li>Every discount is recorded with your name and shows on the Dashboard.</li>
+        </ul>
+    </div></details>
+    {% if 'loyalty_points' in tenant_features or 'crm' in tenant_features %}
+    <details class="rsg-more"><summary>Link the guest and loyalty points</summary><div>
+        <ol class="rsg-steps">
+            <li>On the bill type the guest's phone in <span class="rsg-ui">Guest phone number</span> and press <span class="rsg-ui">Lookup</span>. Add a name for a new guest.</li>
+            {% if 'loyalty_points' in tenant_features %}<li>To use points, fill <span class="rsg-ui">Redeem pts</span>. After payment press <span class="rsg-ui">Award Points</span>.</li>{% endif %}
+        </ol>
+    </div></details>
+    {% endif %}
+    {% endif %}
+    {% if 'floor_plan' in tenant_features %}<div class="rsg-actions"><a class="rsg-btn rsg-btn-gold" href="/tables/"><i class="bi bi-box-arrow-up-right"></i> Open Feature: Tables</a></div>{% endif %}
+</section>
+{% endif %}
+
+{% if role in "owner,manager,cashier,captain" %}
+<section class="rsg-section" id="g-pay" data-group="Billing &amp; payment" data-title="Take payment: cash, card, part payments"
+         data-roles="manager,cashier,captain" data-keywords="payment pay cash card split partial change tendered pay all fully paid">
+    <h2>Take payment: cash, card, part payments</h2>
+    <p class="rsg-lead">Record exactly what the guest paid. A bill can be paid in parts (some cash, some card) until the balance is zero.</p>
+    <div class="rsg-facts">
+        <div class="rsg-fact"><b>Who</b><span>Owner, Manager, Cashier, Captain</span></div>
+        <div class="rsg-fact"><b>Before you start</b><span>The bill is made and a <button type="button" class="btn btn-link p-0 align-baseline" data-goto="register">cash register is open</button></span></div>
+        <div class="rsg-fact"><b>Where</b><span>Table → <span class="rsg-ui">Pay Bill</span>, or the bill page</span></div>
+    </div>
+    <ol class="rsg-steps">
+        <li>Open the bill (<span class="rsg-ui">Pay Bill</span> on the table).</li>
+        <li>Press <span class="rsg-ui">Pay All</span> to fill the full balance, or type a part amount in <span class="rsg-ui">Enter amount…</span> (<span class="rsg-eg">500</span>).</li>
+        <li>Press the method the guest used: <b>Cash</b> or <b>Card</b> (the labels your owner set).</li>
+        <li>For cash, give change if shown.</li>
+        <li>Repeat for the rest if the guest pays in parts. {% if 'split_bill' in tenant_features %}<span class="rsg-ui">Split</span> divides the balance into equal shares.{% endif %}</li>
+    </ol>
+    <div class="rsg-outcome">
+        <div class="res"><b>Result</b>The balance shows <b>FULLY PAID</b>, the table frees up, and <span class="rsg-ui">Print Receipt</span> appears.</div>
+        <div class="nxt"><b>Next</b>{% if role in "owner,manager,cashier" %}<button type="button" class="btn btn-link p-0 align-baseline" data-goto="receipt">Print the receipt</button>.{% else %}A cashier or manager prints the receipt.{% endif %} For UPI see <button type="button" class="btn btn-link p-0 align-baseline" data-goto="upi">UPI/QR payments</button>.</div>
+    </div>
+    <details class="rsg-more"><summary>Common problems</summary><div>
+        <ul>
+            <li><b>"No open cash session"</b>: open the register when asked (see <button type="button" class="btn btn-link p-0 align-baseline" data-goto="register">Open the cash register</button>).</li>
+            <li><b>Typed the wrong amount</b>: a payment can't be edited. A manager or owner can refund it from Order History.</li>
+            <li><b>Internet dropped</b>: cash payments are saved and sent later. UPI and card need a working connection.</li>
+            {% if 'split_bill' in tenant_features %}<li><b>Split refuses UPI</b>: each UPI share needs its own reference, so take UPI shares one at a time with the UPI button.</li>{% endif %}
+        </ul>
+    </div></details>
+    <div class="rsg-actions"><button type="button" class="rsg-btn" data-tour-start="bill-page"><i class="bi bi-signpost-split"></i> Start walkthrough (on a bill page)</button></div>
+    <script type="application/json" class="rsg-tour" data-tour="bill-page" data-title="Bill page walkthrough" data-path="^/bill/\d+/$" data-start="" data-need="Open any bill first (Tables, then Pay Bill), then press How to Use and start this walkthrough there.">
+    [
+      {"title": "Balance", "sel": ".balance-card", "text": "What is still to be paid. It says FULLY PAID at the end."},
+      {"title": "Discount", "sel": "#discount-type", "text": "Choose % Off or ₹ Flat, type a value and reason, then press Apply yourself.", "missing": "Discounts can't be changed on a paid bill, or your login can't give them."},
+      {"title": "Amount", "sel": "#payAmount", "text": "Pay All fills the whole balance; or type a part amount."},
+      {"title": "Method", "sel": ".btn-pay", "text": "Press the method the guest actually used. The walkthrough never presses it."},
+      {"title": "Print", "sel": "button", "has": "Print Bill", "text": "Print a copy for the guest."}
+    ]
+    </script>
+</section>
+{% endif %}
+
+{% if role in "owner,manager,cashier,captain,waiter" %}
+<section class="rsg-section" id="g-upi" data-group="Billing &amp; payment" data-title="PhonePe / UPI QR payments"
+         data-roles="manager,cashier,captain,waiter" data-keywords="upi qr phonepe gpay scan pay reference utr verify confirm pending i have paid">
+    <h2>PhonePe / UPI QR payments</h2>
+    <p class="rsg-lead">The guest scans the restaurant's QR and pays in their UPI app. The payment stays <b>PENDING</b> until a cashier, manager or owner checks the money in the restaurant's PhonePe/bank app and enters the transaction reference.</p>
+    <div class="rsg-callout warn">
+        <p><b>Never treat a QR as paid just because it was shown, scanned, or the guest pressed "I have paid", or showed you a screenshot.</b> Only money you can see in the restaurant's own PhonePe/bank app counts.</p>
+    </div>
+    <div class="rsg-facts">
+        <div class="rsg-fact"><b>Show the QR</b><span>Owner, Manager, Cashier, Captain, Waiter</span></div>
+        <div class="rsg-fact"><b>Confirm the payment</b><span>Owner, Manager, Cashier only</span></div>
+        <div class="rsg-fact"><b>Before you start</b><span>The bill is made; the QR is uploaded in Payment Methods</span></div>
+    </div>
+    <h3>Show the QR</h3>
+    <ol class="rsg-steps">
+        <li>On the bill, type the amount or press <span class="rsg-ui">Pay All</span>.</li>
+        <li>Press the UPI button (labelled as your owner set it, for example <b>UPI</b> or <b>PhonePe</b>).</li>
+        <li>A <b>Scan &amp; Pay</b> window shows the QR, order number, <b>Amount to pay</b> and payee. The status says <b>Payment PENDING</b>.</li>
+        <li>Let the guest scan and pay that exact amount.</li>
+    </ol>
+    {% if role in "owner,manager,cashier" %}
+    <h3>Confirm the money arrived</h3>
+    <ol class="rsg-steps">
+        <li>Open the restaurant's PhonePe Business or bank app and find this payment: same amount, just now.</li>
+        <li>Copy its transaction reference (UTR / transaction ID) into <span class="rsg-ui">UPI transaction reference (UTR / transaction ID)</span>, for example <span class="rsg-eg">427812345678</span>.</li>
+        <li>Tick <i>"I have checked the restaurant's PhonePe / bank app and ₹… from this guest has been received."</i></li>
+        <li>Press <span class="rsg-ui">Confirm payment received</span>.</li>
+    </ol>
+    <div class="rsg-outcome">
+        <div class="res"><b>Result</b>The payment is recorded with the reference, your name and the time. The bill shows the UPI reference.</div>
+        <div class="nxt"><b>Next</b>If money is still due, take the rest; then print the receipt.</div>
+    </div>
+    <h3>If the money did not arrive</h3>
+    <ul>
+        <li>Press <span class="rsg-ui">Close (keep pending)</span> to wait and check again later. Pending requests are listed on <b>Pending UPI</b> (<a href="/upi/pending/">/upi/pending/</a>).</li>
+        <li>Press <span class="rsg-ui">Cancel QR request</span> if the guest will pay another way. Nothing is recorded.</li>
+    </ul>
+    {% else %}
+    <h3>Then hand over</h3>
+    <ol class="rsg-steps">
+        <li>The window says <i>"Ask a cashier or manager to check the payment and confirm it."</i></li>
+        <li>Press <span class="rsg-ui">Close (keep pending)</span> and tell the cashier the table and amount. Don't tell the guest the bill is paid until the cashier confirms.</li>
+    </ol>
+    {% endif %}
+    <details class="rsg-more"><summary>Common problems</summary><div>
+        <ul>
+            <li><b>"Reference already used"</b>: each reference can be used once. Check you copied the right payment.</li>
+            <li><b>Amount differs</b>: the guest paid a different amount. Cancel the QR request and record what was actually received.</li>
+            <li><b>Guest paid but you can't see it</b>: keep it pending and check again in a few minutes. Never confirm without seeing it.</li>
+            <li><b>The QR pays a different name</b>: stop and tell the owner; the QR in Payment Methods must be replaced.</li>
+        </ul>
+    </div></details>
+    {% if role in "owner,manager,cashier" %}<div class="rsg-actions"><a class="rsg-btn rsg-btn-gold" href="/upi/pending/"><i class="bi bi-box-arrow-up-right"></i> Open Feature: Pending UPI</a></div>{% endif %}
+</section>
+{% endif %}
+
+{% if role in "owner,manager,cashier" %}
+<section class="rsg-section" id="g-receipt" data-group="Billing &amp; payment" data-title="Receipts and reprints"
+         data-roles="manager,cashier" data-keywords="receipt print reprint thermal pdf copy">
+    <h2>Receipts and reprints</h2>
+    <p class="rsg-lead">After payment, print the receipt. You can reprint any past bill.</p>
+    <ol class="rsg-steps">
+        <li>On a fully paid bill press <span class="rsg-ui">Print Receipt</span> (or <span class="rsg-ui">Thermal Print</span> for an 80 mm printer).</li>
+        <li>In the print window choose the printer and press Print.</li>
+        <li>For an old bill: open <b>Order History</b>, find the order and open it to print again.</li>
+    </ol>
+    <div class="rsg-outcome">
+        <div class="res"><b>Result</b>The receipt shows the bill number, dishes, taxes, payments (with UPI references) and the restaurant's details.</div>
+        <div class="nxt"><b>Next</b>{% if 'floor_plan' in tenant_features %}When guests leave, press <span class="rsg-ui">Mark Clean</span> on the table if it shows "Table Dirty".{% else %}Start the next order.{% endif %}</div>
+    </div>
+    <div class="rsg-callout"><p>PDF download of bills needs an extra Windows component (GTK). Printing from the browser works without it.</p></div>
+</section>
+{% endif %}
+
+{% if role in "owner,manager,cashier,captain" %}
+<section class="rsg-section" id="g-corrections" data-group="Billing &amp; payment" data-title="Corrections: cancel, reduce, free dish"
+         data-roles="manager,cashier,captain" data-keywords="cancel void remove reduce quantity complimentary free mistake wrong item cancel order close without payment">
+    <h2>Corrections: cancel, reduce, free dish</h2>
+    <p class="rsg-lead">Fix mistakes before payment. Every correction is recorded with your name and reason.</p>
+    <div class="rsg-facts">
+        <div class="rsg-fact"><b>Who</b><span>Cancel/reduce: Owner, Manager, Cashier, Captain. Free dish (COMP) and closing unpaid bills: Owner, Manager.</span></div>
+        <div class="rsg-fact"><b>Where</b><span>{% if 'running_order' in tenant_features and 'floor_plan' in tenant_features %}Table → <span class="rsg-ui">More</span> → <span class="rsg-ui">Review Items Individually</span>; {% endif %}the bill page; the <b>Active</b> tab on Billing</span></div>
+    </div>
+    <ol class="rsg-steps">
+        <li>Open the order{% if 'running_order' in tenant_features and 'floor_plan' in tenant_features %} (<span class="rsg-ui">Review Items Individually</span>){% endif %}.</li>
+        <li><b>One less</b>: press <b>−</b> (Remove one). <b>Whole dish</b>: press <span class="rsg-ui">CANCEL</span>.</li>
+        <li>Type the reason when asked (<span class="rsg-eg">guest changed mind</span>).</li>
+        <li>If the kitchen already made the dish, the POS asks whether it was made. Made dishes are recorded as wastage; unmade ones go back to stock. Putting a made dish back in stock needs a manager.</li>
+        <li><b>Cancel the whole order</b>: <span class="rsg-ui">Cancel Order</span> / <span class="rsg-ui">Cancel Entire Order</span>, with a reason.</li>
+    </ol>
+    {% if role in "owner,manager" %}
+    <ul>
+        <li><b>Free dish</b>: <span class="rsg-ui">COMP</span> next to the dish makes it ₹0.</li>
+        <li><b>Close a bill without payment</b> (guest left, staff meal): <span class="rsg-ui">Close Without Payment</span> on the bill, with a reason. Use rarely; it's on the audit report.</li>
+    </ul>
+    {% endif %}
+    <div class="rsg-outcome">
+        <div class="res"><b>Result</b>The bill total updates and the kitchen ticket drops the dish.</div>
+        <div class="nxt"><b>Next</b>After payment, mistakes are fixed with a <button type="button" class="btn btn-link p-0 align-baseline" data-goto="{% if role in 'owner,manager' %}refunds{% else %}history{% endif %}">refund{% if role not in 'owner,manager' %} (ask a manager){% endif %}</button>.</div>
+    </div>
+    <details class="rsg-more"><summary>Common problems</summary><div>
+        <ul>
+            <li><b>Served dish can't be cancelled</b>: only a manager or owner can change served dishes.</li>
+            <li><b>Paid bill can't be changed</b>: use a refund instead.</li>
+        </ul>
+    </div></details>
+</section>
+{% endif %}
+
+{% if role in "owner,manager" %}
+<section class="rsg-section" id="g-refunds" data-group="Billing &amp; payment" data-title="Refunds"
+         data-roles="manager" data-keywords="refund return money approve reject complaint pending refunds">
+    <h2>Refunds</h2>
+    <p class="rsg-lead">Give money back on a paid bill. A manager requests the refund; the owner approves it.</p>
+    <div class="rsg-facts">
+        <div class="rsg-fact"><b>Who</b><span>Request: Manager, Owner. Approve: Owner only. Reject: Manager, Owner.</span></div>
+        <div class="rsg-fact"><b>Where</b><span>Order History → the order; <b>Pending Refunds</b></span></div>
+    </div>
+    <ol class="rsg-steps">
+        <li>Open <b>Order History</b> and find the order (search by order number or phone).</li>
+        <li>Open it and choose refund. Type the <span class="rsg-ui">Amount (₹)</span> (no more than <span class="rsg-ui">Max Refundable</span>), the guest's complaint, and the <span class="rsg-ui">Manager Note *</span>.</li>
+        <li>Press <span class="rsg-ui">Request Refund</span>.</li>
+        <li>The owner opens <b>Pending Refunds</b> and presses <span class="rsg-ui">Approve</span> or <span class="rsg-ui">Reject</span>.</li>
+        <li>Give the money back the same way it was paid (cash from the drawer, UPI from the restaurant's app).</li>
+    </ol>
+    <div class="rsg-outcome">
+        <div class="res"><b>Result</b>Approved refunds show on the order and reduce the day's sales in reports.</div>
+        <div class="nxt"><b>Next</b>Check the cash drawer matches at closing.</div>
+    </div>
+    <div class="rsg-callout"><p>The POS only records the refund. It never sends money by itself: the person handing back the money does that.</p></div>
+    <div class="rsg-actions">
+        <a class="rsg-btn rsg-btn-gold" href="/refunds/pending/"><i class="bi bi-box-arrow-up-right"></i> Open Feature: Pending Refunds</a>
+        <a class="rsg-btn" href="/history/"><i class="bi bi-clock-history"></i> Order History</a>
+    </div>
+</section>
+{% endif %}
+
+{% if role in "owner,manager,cashier,captain,waiter" %}
+<section class="rsg-section" id="g-history" data-group="Billing &amp; payment" data-title="Order history"
+         data-roles="manager,cashier,captain,waiter" data-keywords="history past orders search find bill number phone export csv">
+    <h2>Order history</h2>
+    <p class="rsg-lead">Find any past order to check it, reprint it{% if role in "owner,manager" %}, refund it or export a list{% endif %}.</p>
+    <div class="rsg-facts">
+        <div class="rsg-fact"><b>Who</b><span>Owner and Manager see all orders. Other roles see the orders their role is allowed to see (waiters: their own).</span></div>
+        <div class="rsg-fact"><b>Where</b><span>The <i class="bi bi-clock-history"></i> icon at the top, or Dashboard → <b>History</b></span></div>
+    </div>
+    <ol class="rsg-steps">
+        <li>Open Order History.</li>
+        <li>Set <span class="rsg-ui">From</span>/<span class="rsg-ui">To</span> dates, <span class="rsg-ui">Status</span>, <span class="rsg-ui">Payment</span>, <span class="rsg-ui">Source</span>{% if role in "owner,manager" %} or <span class="rsg-ui">Staff</span>{% endif %}.</li>
+        <li>Or type an order number or phone in <span class="rsg-ui">Search order # / phone</span> (<span class="rsg-eg">INV-1-…</span>) and press <span class="rsg-ui">Search</span>.</li>
+        <li>Click a row to see the dishes and payments.</li>
+    </ol>
+    {% if role in "owner,manager" %}<p><span class="rsg-ui">Export CSV</span> downloads the list for a spreadsheet.</p>{% endif %}
+    <div class="rsg-actions"><a class="rsg-btn rsg-btn-gold" href="/history/"><i class="bi bi-box-arrow-up-right"></i> Open Feature: Order History</a></div>
+</section>
+{% endif %}
+
+{# ============================== BACK OFFICE ============================== #}
+
+{% if role in "owner,manager" and 'inventory' in tenant_features %}
+<section class="rsg-section" id="g-inventory" data-group="Back office" data-title="Inventory (stock)"
+         data-roles="manager" data-keywords="inventory stock ingredient low stock threshold add received waste wastage adjust count">
+    <h2>Inventory (stock)</h2>
+    <p class="rsg-lead">Keep a count of every ingredient. Stock goes down by itself when dishes with recipes are sent to the kitchen, and up when deliveries arrive.</p>
+    <div class="rsg-facts">
+        <div class="rsg-fact"><b>Who</b><span>Owner, Manager</span></div>
+        <div class="rsg-fact"><b>Where</b><span>Dashboard → <b>Inventory</b></span></div>
+    </div>
+    <h3>Add an ingredient</h3>
+    <ol class="rsg-steps">
+        <li>Press <span class="rsg-ui">Add Ingredient</span>.</li>
+        <li><span class="rsg-ui">Ingredient Name</span>: <span class="rsg-eg">Paneer</span>. <span class="rsg-ui">Category (optional)</span>: <span class="rsg-eg">Dairy</span>.</li>
+        <li><span class="rsg-ui">Measurement Unit</span>: Kilograms (kg). <span class="rsg-ui">Cost Price / Unit</span>: <span class="rsg-eg">360</span>.</li>
+        <li><span class="rsg-ui">Initial Stock</span>: <span class="rsg-eg">8</span>. <span class="rsg-ui">Low Threshold</span>: <span class="rsg-eg">3</span> (an alert shows below this).</li>
+        <li>Press <span class="rsg-ui">Create Ingredient</span>.</li>
+    </ol>
+    <h3>Everyday stock changes</h3>
+    <div class="rsg-table-wrap"><table class="rsg-table">
+        <thead><tr><th>Situation</th><th>Use</th></tr></thead>
+        <tbody>
+            <tr><td>A delivery arrived without a purchase order</td><td>Type the quantity in <span class="rsg-ui">Qty</span> and press <span class="rsg-ui">Add</span></td></tr>
+            <tr><td>Spilled, broken, spoiled</td><td><span class="rsg-ui">Waste</span> → quantity, <span class="rsg-ui">Reason</span> → <span class="rsg-ui">Log Wastage</span></td></tr>
+            <tr><td>Physical count is different</td><td><span class="rsg-ui">Adjust</span> → <span class="rsg-ui">What you actually counted</span> + reason → <span class="rsg-ui">Apply Adjustment</span></td></tr>
+            <tr><td>Change threshold, cost or supplier</td><td>The edit (pencil) icon → <span class="rsg-ui">Save Changes</span></td></tr>
+        </tbody>
+    </table></div>
+    <div class="rsg-outcome">
+        <div class="res"><b>Result</b>Items below their threshold are flagged, and the Dashboard shows the low-stock count.</div>
+        <div class="nxt"><b>Next</b>{% if 'purchase_orders' in tenant_features %}Reorder with <button type="button" class="btn btn-link p-0 align-baseline" data-goto="purchasing">purchase orders</button>.{% else %}Link ingredients to dishes in Menu → View Recipe.{% endif %}</div>
+    </div>
+    <details class="rsg-more"><summary>Reports for stock</summary><div>
+        <ul><li><span class="rsg-ui">Consumption</span>: what was used. <span class="rsg-ui">Variance</span>: expected versus counted stock.</li></ul>
+    </div></details>
+    <div class="rsg-actions">
+        <a class="rsg-btn rsg-btn-gold" href="/inventory/board/"><i class="bi bi-box-arrow-up-right"></i> Open Feature: Inventory</a>
+        <button type="button" class="rsg-btn" data-tour-start="inventory"><i class="bi bi-signpost-split"></i> Start walkthrough</button>
+    </div>
+    <script type="application/json" class="rsg-tour" data-tour="inventory" data-title="Inventory walkthrough" data-path="^/inventory/board/$" data-start="/inventory/board/">
+    [
+      {"title": "Search", "sel": "#inventorySearch", "text": "Find an ingredient quickly."},
+      {"title": "New ingredient", "sel": "button", "has": "Add Ingredient", "text": "Add an ingredient with its unit, cost, stock and low threshold."},
+      {"title": "Received stock", "sel": "button[title='Add received stock']", "text": "Type a quantity next to an item and press Add when a delivery arrives."},
+      {"title": "Wastage", "sel": "button", "has": "Waste", "text": "Record spillage or spoilage; it reduces stock and counts as a loss."},
+      {"title": "Count correction", "sel": "button", "has": "Adjust", "text": "After a physical count, set the real number."},
+      {"title": "Reorder", "sel": "#genPoBtn", "text": "Creates draft purchase orders for low items. It asks before doing anything."}
+    ]
+    </script>
+</section>
+{% endif %}
+
+{% if role in "owner,manager" and 'purchase_orders' in tenant_features %}
+<section class="rsg-section" id="g-purchasing" data-group="Back office" data-title="Suppliers and purchase orders"
+         data-roles="manager" data-keywords="supplier vendor purchase order po receive delivery reorder">
+    <h2>Suppliers and purchase orders</h2>
+    <p class="rsg-lead">Keep supplier details, order stock from them, and add it to stock when it arrives.</p>
+    <div class="rsg-facts">
+        <div class="rsg-fact"><b>Who</b><span>Owner, Manager</span></div>
+        <div class="rsg-fact"><b>Where</b><span>Inventory → <span class="rsg-ui">Suppliers</span> / <span class="rsg-ui">Purchase Orders</span></span></div>
+    </div>
+    <h3>Add a supplier</h3>
+    <ol class="rsg-steps">
+        <li>Inventory → <span class="rsg-ui">Suppliers</span>.</li>
+        <li><span class="rsg-ui">Supplier Name *</span>: <span class="rsg-eg">Fresh Farm Produce Co.</span>; add contact person, phone, email, GST number and address.</li>
+        <li>Press <span class="rsg-ui">Add Supplier</span>.</li>
+    </ol>
+    <h3>Order and receive stock</h3>
+    <ol class="rsg-steps">
+        <li>Inventory → <span class="rsg-ui">Purchase Orders</span> → <span class="rsg-ui">New PO</span>.</li>
+        <li>Choose the <span class="rsg-ui">Supplier</span>, press <span class="rsg-ui">Add Item</span> for each ingredient and quantity (<span class="rsg-eg">Onion 20 kg</span>).</li>
+        <li>Press <span class="rsg-ui">Create Draft PO</span>. Check it, then press <span class="rsg-ui">Order</span> when you send it to the supplier.</li>
+        <li>When the goods arrive press <span class="rsg-ui">Receive</span>, check quantities and press <span class="rsg-ui">Confirm Receipt</span>.</li>
+    </ol>
+    <div class="rsg-outcome">
+        <div class="res"><b>Result</b>Received quantities are added to stock.</div>
+        <div class="nxt"><b>Next</b>{% if 'advanced_reports' in tenant_features %}Record the supplier bill as an <button type="button" class="btn btn-link p-0 align-baseline" data-goto="expenses">expense</button> if your restaurant tracks expenses here.{% else %}Check the new stock on the Inventory screen.{% endif %}</div>
+    </div>
+    <div class="rsg-actions">
+        <a class="rsg-btn rsg-btn-gold" href="/inventory/purchase-orders/"><i class="bi bi-box-arrow-up-right"></i> Open Feature: Purchase Orders</a>
+        <a class="rsg-btn" href="/inventory/suppliers/"><i class="bi bi-truck"></i> Suppliers</a>
+    </div>
+</section>
+{% endif %}
+
+{% if role in "owner,manager,cashier,captain" and 'crm' in tenant_features %}
+<section class="rsg-section" id="g-customers" data-group="Back office" data-title="Customers (CRM){% if 'loyalty_points' in tenant_features %} and loyalty{% endif %}"
+         data-roles="manager,cashier,captain" data-keywords="customer guest crm phone visits spent loyalty points">
+    <h2>Customers{% if 'loyalty_points' in tenant_features %} and loyalty{% endif %}</h2>
+    <p class="rsg-lead">Each guest linked to a bill by phone number builds a history: visits, total spent{% if 'loyalty_points' in tenant_features %} and points{% endif %}.</p>
+    <div class="rsg-facts">
+        <div class="rsg-fact"><b>Who</b><span>Owner, Manager, Cashier, Captain</span></div>
+        <div class="rsg-fact"><b>Where</b><span>Dashboard → <b>CRM</b></span></div>
+    </div>
+    <ol class="rsg-steps">
+        <li>On a bill, type the guest's phone in <span class="rsg-ui">Guest phone number</span> and press <span class="rsg-ui">Lookup</span> (see <button type="button" class="btn btn-link p-0 align-baseline" data-goto="bill">Make the bill</button>).</li>
+        <li>To find a guest later open <b>CRM</b> and type in <span class="rsg-ui">Search guests…</span></li>
+        <li>Press <span class="rsg-ui">View</span> to see their visits and orders.</li>
+    </ol>
+    <div class="rsg-callout"><p>Only save a guest's phone with their permission. The POS doesn't send messages to guests unless WhatsApp receipts are set up by a technician.</p></div>
+    <div class="rsg-actions"><a class="rsg-btn rsg-btn-gold" href="/crm/"><i class="bi bi-box-arrow-up-right"></i> Open Feature: CRM</a></div>
+</section>
+{% endif %}
+
+{% if role in "owner,manager,cashier,captain" and 'reservations' in tenant_features %}
+<section class="rsg-section" id="g-reservations" data-group="Back office" data-title="Reservations"
+         data-roles="manager,cashier,captain" data-keywords="reservation booking book table seat no show covers">
+    <h2>Reservations</h2>
+    <p class="rsg-lead">Record table bookings and follow them through the evening.</p>
+    <div class="rsg-facts">
+        <div class="rsg-fact"><b>Who</b><span>Owner, Manager, Cashier, Captain</span></div>
+        <div class="rsg-fact"><b>Where</b><span>Dashboard → <b>Reservations</b></span></div>
+    </div>
+    <ol class="rsg-steps">
+        <li>Press <span class="rsg-ui">New Booking</span>.</li>
+        <li><span class="rsg-ui">Phone Number*</span>, <span class="rsg-ui">Guest Name</span>, <span class="rsg-ui">Time*</span> (<span class="rsg-eg">today 20:00</span>), <span class="rsg-ui">Table</span> (or Any Free Table) and <span class="rsg-ui">Covers (Guests)</span> (<span class="rsg-eg">4</span>).</li>
+        <li>Press <span class="rsg-ui">Confirm Booking</span>.</li>
+        <li>On the day use the row buttons: Confirm, Seat Guest when they arrive, No Show, or Cancel.</li>
+    </ol>
+    <div class="rsg-outcome">
+        <div class="res"><b>Result</b>The booking shows in the list with its status.</div>
+        <div class="nxt"><b>Next</b>When seated, start the table's order as usual.</div>
+    </div>
+    <div class="rsg-actions"><a class="rsg-btn rsg-btn-gold" href="/crm/reservations/"><i class="bi bi-box-arrow-up-right"></i> Open Feature: Reservations</a></div>
+</section>
+{% endif %}
+
+{% if role in "owner,manager" and 'advanced_reports' in tenant_features %}
+<section class="rsg-section" id="g-expenses" data-group="Back office" data-title="Expenses"
+         data-roles="manager" data-keywords="expense rent salary electricity cost recurring">
+    <h2>Expenses</h2>
+    <p class="rsg-lead">Record costs such as rent, electricity and gas so the reports can show profit, not only sales.</p>
+    <div class="rsg-facts">
+        <div class="rsg-fact"><b>Who</b><span>Owner, Manager</span></div>
+        <div class="rsg-fact"><b>Where</b><span>Reports → Expenses (<a href="/finance/expenses/">/finance/expenses/</a>)</span></div>
+    </div>
+    <ol class="rsg-steps">
+        <li>Choose a <span class="rsg-ui">Category</span>, type the <span class="rsg-ui">Amount (₹)</span> (<span class="rsg-eg">4500</span>) and <span class="rsg-ui">Date</span>.</li>
+        <li>Choose the <span class="rsg-ui">Outlet</span>, add notes, and tick <span class="rsg-ui">Recurring monthly expense</span> for rent-like costs.</li>
+        <li>Press <span class="rsg-ui">Record Expense</span>.</li>
+    </ol>
+    <div class="rsg-outcome"><div class="res"><b>Result</b>It appears under Recent Expenses and in the reports' Net Profit.</div></div>
+    <div class="rsg-actions"><a class="rsg-btn rsg-btn-gold" href="/finance/expenses/"><i class="bi bi-box-arrow-up-right"></i> Open Feature: Expenses</a></div>
+</section>
+{% endif %}
+
+{% if role in "owner,manager" and 'reports' in tenant_features %}
+<section class="rsg-section" id="g-reports" data-group="Back office" data-title="Reports"
+         data-roles="manager" data-keywords="reports sales revenue payment methods top dishes category export csv z report gst">
+    <h2>Reports</h2>
+    <p class="rsg-lead">Sales, payment methods, best-selling dishes, categories, table turnover, costs and profit, all from the real orders in the POS.</p>
+    <div class="rsg-facts">
+        <div class="rsg-fact"><b>Who</b><span>Owner, Manager</span></div>
+        <div class="rsg-fact"><b>Where</b><span>Dashboard → <b>Reports</b></span></div>
+    </div>
+    <ol class="rsg-steps">
+        <li>Open <b>Reports</b>.</li>
+        <li>Choose the period: Today, Yesterday, Last 7 Days, Last 30 Days or Custom Range (pick start and end dates).</li>
+        <li>Read the panels: Revenue, Payment Methods, Signature Dishes, Category Revenue, Table Turnover{% if 'advanced_reports' in tenant_features %}, Operating Expenses &amp; Net Profit{% endif %}.</li>
+        <li>Press <span class="rsg-ui">Export</span> for CSV files, or <span class="rsg-ui">Z-Report</span> for the till report.</li>
+    </ol>
+    {% if 'advanced_reports' in tenant_features %}
+    <details class="rsg-more"><summary>More reports</summary><div>
+        <ul>
+            <li><a href="/reports/menu-engineering/">Menu engineering</a>: which dishes earn most.</li>
+            <li><a href="/reports/labor/">Labour</a>: staff hours and cost.</li>
+            <li><a href="/reports/audit/">Audit</a>: discounts, cancellations, unpaid closes.</li>
+            {% if 'kitchen_display' in tenant_features %}<li><a href="/reports/kitchen/">Kitchen</a>: preparation times.</li>{% endif %}
+            {% if 'inventory' in tenant_features %}<li><a href="/reports/inventory/">Inventory</a>: stock value and usage.</li>{% endif %}
+        </ul>
+    </div></details>
+    {% endif %}
+    <div class="rsg-actions"><a class="rsg-btn rsg-btn-gold" href="/reports/dashboard/"><i class="bi bi-box-arrow-up-right"></i> Open Feature: Reports</a></div>
+</section>
+{% endif %}
+
+{# ============================== CLOSING THE DAY ============================== #}
+
+<section class="rsg-section" id="g-closing" data-group="Closing the day" data-title="End of day"
+         data-roles="manager,cashier,captain,waiter,chef,kitchen" data-keywords="close end of day closing register z report reconcile count cash clock out">
+    <h2>End of day</h2>
+    <p class="rsg-lead">Finish every open order, check the money, and close the register so tomorrow starts clean.</p>
+    {% if role in "owner,manager" %}
+    <ol class="rsg-steps">
+        <li><b>No open orders</b>: on Tables/Live Orders, every table should be Free or Dirty. Take or cancel any remaining bills.</li>
+        <li><b>Pending UPI</b>: open <a href="/upi/pending/">Pending UPI</a>. Confirm each one you can see in the bank app; cancel the rest and collect the money another way.</li>
+        <li><b>Count the cash</b> in the drawer.</li>
+        <li>Dashboard → <b>Cash Register</b> → <span class="rsg-ui">Close Register</span> → type the count in <span class="rsg-ui">Total Physical Cash in Drawer</span> (<span class="rsg-eg">18450</span>) → <span class="rsg-ui">Finalize &amp; Reconcile</span>.</li>
+        <li>Check the <b>Discrepancy</b>. Investigate any big difference the same night.</li>
+        <li>Open the <span class="rsg-ui">Z-Report</span> and keep it (print or save).</li>
+        {% if 'kitchen_display' in tenant_features %}<li>Kitchen: <span class="rsg-ui">Clear All</span> old tickets if any remain.</li>{% endif %}
+        <li>Everyone clocks out. Log out of shared devices.</li>
+    </ol>
+    <div class="rsg-outcome">
+        <div class="res"><b>Result</b>The session shows Closed with cash sales and any difference.</div>
+        <div class="nxt"><b>Next</b>Tomorrow, open a new register with the float you leave in the drawer.</div>
+    </div>
+    {% elif role in "cashier,captain" %}
+    <ol class="rsg-steps">
+        <li>Make sure every bill you handled is fully paid or handed over to the manager.</li>
+        {% if role == "cashier" %}<li>Open <a href="/upi/pending/">Pending UPI</a>: confirm the ones you can see in the bank app; tell the manager about the rest.</li>{% endif %}
+        <li>Give the drawer to the manager for counting. The manager closes the register.</li>
+        <li>Clock out and log out.</li>
+    </ol>
+    {% elif role == "waiter" %}
+    <ol class="rsg-steps">
+        <li>Check none of your tables has dishes still Ready (serve them) or an unpaid bill (tell the cashier).</li>
+        <li>Mark your tables clean.</li>
+        <li>Clock out and log out.</li>
+    </ol>
+    {% else %}
+    <ol class="rsg-steps">
+        <li>Finish or mark ready every ticket on the kitchen screen.</li>
+        <li>Record wasted food with the manager so stock stays correct.</li>
+        <li>Clock out and log out.</li>
+    </ol>
+    {% endif %}
+    {% if role in "owner,manager" %}<div class="rsg-actions"><a class="rsg-btn rsg-btn-gold" href="/shifts/sessions/"><i class="bi bi-box-arrow-up-right"></i> Open Feature: Cash Register</a></div>{% endif %}
+</section>
+
+{% if role in "owner,manager" %}
+<section class="rsg-section" id="g-example" data-group="Closing the day" data-title="A complete example day"
+         data-roles="manager" data-keywords="example walkthrough day story practice test order">
+    <h2>A complete example day</h2>
+    <p class="rsg-lead">A practice run from opening to closing. All names, numbers and amounts here are examples. Try it once with a test order before going live.</p>
+    <ol class="rsg-steps">
+        <li><b>11:00 Open.</b> The manager logs in, presses the clock icon → <span class="rsg-ui">Clock In</span>, then Cash Register → <span class="rsg-ui">Open Register</span> with float <span class="rsg-eg">2000</span>.</li>
+        <li><b>11:05 Sold out.</b> Fish is late today: Menu → <span class="rsg-ui">Toggle Available</span> on <span class="rsg-eg">Surmai Fry</span>.</li>
+        {% if 'floor_plan' in tenant_features %}
+        <li><b>13:10 Table order.</b> The waiter taps <span class="rsg-ui">New Order</span> on <span class="rsg-eg">T-4</span>, adds <span class="rsg-eg">2 × Misal Pav</span> and <span class="rsg-eg">1 × Masala Chaas</span> with note "less spicy", and presses <span class="rsg-ui">Dispatch</span>.</li>
+        {% endif %}
+        {% if 'kitchen_display' in tenant_features %}<li><b>13:11 Kitchen.</b> The chef presses <span class="rsg-ui">Start Prep</span>, then <span class="rsg-ui">Ready ✓</span>.</li>{% endif %}
+        <li><b>13:25 Serve.</b> The waiter serves and marks the dishes Served.</li>
+        <li><b>13:50 Bill.</b> The captain presses <span class="rsg-ui">Bill</span>, applies a 5% discount with reason "regular guest", and prints the bill.</li>
+        <li><b>13:55 Pay by QR.</b> The cashier presses <span class="rsg-ui">Pay All</span> → UPI. The guest scans and pays. The cashier sees the payment in the PhonePe Business app, types its reference (<span class="rsg-eg">427812345678</span>), ticks the box and presses <span class="rsg-ui">Confirm payment received</span>. Then <span class="rsg-ui">Print Receipt</span>.</li>
+        <li><b>14:30 Takeaway.</b> Billing → Walk-in, type <b>Takeaway</b>, add dishes, <span class="rsg-ui">Dispatch</span>, take cash ₹500 for a ₹460 bill, give ₹40 change.</li>
+        <li><b>17:00 Delivery.</b> Inventory → Purchase Orders → <span class="rsg-ui">Receive</span> the vegetable order → <span class="rsg-ui">Confirm Receipt</span>.</li>
+        <li><b>21:00 Mistake.</b> A dish was entered twice before cooking: <span class="rsg-ui">Review Items Individually</span> → <b>−</b> with reason "entered twice".</li>
+        <li><b>23:30 Close.</b> No open tables; Pending UPI empty; count the drawer; <span class="rsg-ui">Close Register</span> → <span class="rsg-ui">Finalize &amp; Reconcile</span>; open the <span class="rsg-ui">Z-Report</span>; everyone clocks out.</li>
+        <li><b>Next morning.</b> Owner checks Reports → Yesterday: sales, payment methods, discounts and low stock.</li>
+    </ol>
+</section>
+{% endif %}
+
+<section class="rsg-section" id="g-problems" data-group="Closing the day" data-title="When something goes wrong"
+         data-roles="manager,cashier,captain,waiter,chef,kitchen" data-keywords="problem error help stuck offline internet printer locked refresh">
+    <h2>When something goes wrong</h2>
+    <div class="rsg-table-wrap"><table class="rsg-table">
+        <thead><tr><th>Problem</th><th>What to do</th></tr></thead>
+        <tbody>
+            <tr><td>"Session Needs a Refresh" or an unfamiliar error</td><td>Reload the page and try again.</td></tr>
+            <tr><td>Internet/Wi-Fi drops</td><td>New orders and cash payments are saved on the device and sent when it's back (a banner shows how many are waiting). UPI and card need the connection.</td></tr>
+            <tr><td>Locked out of your login</td><td>Ask the owner or manager to press Reset Password on your name.</td></tr>
+            <tr><td>Page says you're not allowed</td><td>Your role can't use that screen. Ask the manager.</td></tr>
+            {% if role in "owner,manager,cashier,captain,waiter" %}<tr><td>Table shows the wrong status</td><td>Reload the floor plan. If still wrong, ask a manager.</td></tr>{% endif %}
+            {% if role in "owner,manager,cashier" %}<tr><td>Printer doesn't print</td><td>Check the printer is on and the printing helper app is running; use the browser print window meanwhile.</td></tr>{% endif %}
+            {% if role in "owner,manager,cashier,captain,waiter" %}<tr><td>Guest says they paid by QR but it's not in the app</td><td>Keep it pending. Never confirm without seeing the money.</td></tr>{% endif %}
+            {% if role in "owner,manager" %}<tr><td>The POS window was closed on the restaurant PC</td><td>Double-click <b>start.bat</b> again. Each start makes a backup of the database first.</td></tr>{% endif %}
+        </tbody>
+    </table></div>
+    <h3>Words used in the POS</h3>
+    <div class="rsg-table-wrap"><table class="rsg-table">
+        <tbody>
+            <tr><th>KOT</th><td>Kitchen Order Ticket: the list of dishes for the kitchen.</td></tr>
+            <tr><th>Dispatch</th><td>Save the order and send its KOTs to the kitchen.</td></tr>
+            <tr><th>Float</th><td>Cash in the drawer when the register opens.</td></tr>
+            <tr><th>UTR / reference</th><td>The UPI transaction number in the payment app.</td></tr>
+            <tr><th>Void / cancel</th><td>Removing a dish or order, with a reason.</td></tr>
+            <tr><th>COMP</th><td>Complimentary: a free dish.</td></tr>
+            <tr><th>Z-Report</th><td>End-of-day till report.</td></tr>
+            <tr><th>Business day</th><td>Opening to closing time, even past midnight.</td></tr>
+        </tbody>
+    </table></div>
+</section>
+
+{# ============================== GUIDE ACCESS (owner) ============================== #}
+
+{% if role == "owner" %}
+<section class="rsg-section" id="g-guide-access" data-group="Administration" data-title="Guide Access (who sees which help)"
+         data-roles="" data-admin-only="1" data-keywords="guide access permission matrix role preview help visibility admin">
+    <h2>Guide Access <span class="rsg-preview-tag">Preview only</span></h2>
+    <p class="rsg-lead">See which help sections each staff role gets, and preview the guide as that role.</p>
+
+    <div class="rsg-callout warn">
+        <p><b>Saving is not available yet.</b> Today every staff member automatically sees the help for exactly the features their role can use. The ticks below change only this preview, on this screen, until you close it. They are not saved anywhere and nobody else sees them.</p>
+        <p>Storing your choices needs a small server addition (a place in the database for guide settings and a page to save them). That isn't built, so <span class="rsg-ui">Save Changes</span> is switched off.</p>
+    </div>
+    <div class="rsg-callout"><p><b>Guide access never gives permission.</b> A lock <i class="bi bi-lock"></i> means that role can't use the feature, so its help can't be shown to them. Changing roles is done in <a href="/setup/staff/">Setup → Staff</a>.</p></div>
+
+    <h3>1. Preview as a role</h3>
+    <p>
+        <label for="rsgPreviewRole" class="me-2">Show the guide as:</label>
+        <select id="rsgPreviewRole" class="form-select d-inline-block w-auto" data-rsg-preview-role>
+            <option value="">Owner (you)</option>
+            <option value="manager">Manager</option>
+            <option value="cashier">Cashier</option>
+            <option value="captain">Captain</option>
+            <option value="waiter">Waiter</option>
+            <option value="chef">Chef</option>
+            <option value="kitchen">Kitchen Staff</option>
+        </select>
+    </p>
+
+    <h3>2. Sections by role</h3>
+    <p><span data-rsg-dirty>No unsaved changes</span></p>
+    <div class="rsg-table-wrap">
+        <table class="rsg-table rsg-matrix" data-rsg-matrix>
+            <caption class="visually-hidden">Help sections each staff role can see</caption>
+            <thead><tr><th scope="col">Help section</th><th scope="col">Manager</th><th scope="col">Cashier</th><th scope="col">Captain</th><th scope="col">Waiter</th><th scope="col">Chef</th><th scope="col">Kitchen</th></tr></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+    <div class="rsg-actions">
+        <button type="button" class="rsg-btn rsg-btn-gold" disabled aria-describedby="rsgSaveNote"><i class="bi bi-save"></i> Save Changes</button>
+        <button type="button" class="rsg-btn" data-rsg-reset disabled><i class="bi bi-arrow-counterclockwise"></i> Reset Unsaved Changes</button>
+    </div>
+    <p id="rsgSaveNote" class="text-muted small">Save Changes is off: there is no server endpoint for guide settings yet (preview only).</p>
+    <p class="text-muted small">Sections only the owner sees (Online orders, this page) are not listed. Owner-only actions inside other sections, such as approving refunds, stay owner-only for everyone.</p>
+</section>
+{% endif %}

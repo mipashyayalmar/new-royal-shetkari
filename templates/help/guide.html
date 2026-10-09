@@ -1,0 +1,57 @@
+{% load static %}
+{% comment %}
+"How to Use" help centre. Included by templates/core/base.html only for a signed-in
+restaurant user (has a tenant, not the internal "agent" role) and only when the URL
+asks for it (?guide=... opens it, ?guide_tour=... runs a walkthrough).
+
+Visibility is decided here, on the server: help/_sections.html wraps every section in
+the same role and feature checks the app's own pages use, so a waiter's page never
+contains the owner's sections. help_guide.js only arranges what was rendered.
+{% endcomment %}
+<link rel="stylesheet" href="{% static 'css/help_guide.css' %}">
+{% with role=request.user.role %}
+<div id="rsGuide" class="rsg" role="dialog" aria-modal="true" aria-labelledby="rsgTitle"
+     data-auto-open="{% if request.GET.guide %}1{% endif %}" hidden>
+
+    <div class="rsg-head">
+        <button type="button" class="rsg-btn rsg-icon rsg-toc-toggle" data-rsg-toc-toggle aria-label="Show the contents list"><i class="bi bi-list"></i></button>
+        <h1 id="rsgTitle"><i class="bi bi-question-circle" aria-hidden="true"></i> How to Use</h1>
+        <span class="rsg-role" title="This guide shows only what your login can do">{{ request.user.get_role_display }}</span>
+        <label class="rsg-search">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <span class="visually-hidden">Search the guide</span>
+            <input type="search" data-rsg-search placeholder="Search help: bill, QR, menu, stock…" autocomplete="off">
+        </label>
+        <span class="visually-hidden" aria-live="polite" data-rsg-search-status></span>
+        <button type="button" class="rsg-btn rsg-icon d-none d-md-inline-flex" data-rsg-print title="Print this guide" aria-label="Print this guide"><i class="bi bi-printer"></i></button>
+        <button type="button" class="rsg-btn" data-rsg-close><i class="bi bi-x-lg" aria-hidden="true"></i> Close</button>
+    </div>
+
+    {% if role == "owner" %}
+    <div class="rsg-previewbar" role="status">
+        <i class="bi bi-eye" aria-hidden="true"></i>
+        <span>Previewing the guide as <b data-rsg-preview-label></b>. Only this window changes; staff still see their normal guide. "Open Feature" links still open with your owner login.</span>
+        <button type="button" class="rsg-btn" data-goto="guide-access">Edit ticks</button>
+        <button type="button" class="rsg-btn" data-rsg-preview-exit>Stop preview</button>
+    </div>
+    {% endif %}
+
+    <div class="rsg-body">
+        <nav class="rsg-toc" aria-label="Help contents">
+            <button type="button" class="rsg-btn rsg-toc-close" data-rsg-toc-toggle style="margin:0 1.1rem 0.5rem;"><i class="bi bi-x-lg"></i> Close contents</button>
+            <div data-rsg-toc></div>
+        </nav>
+        <div class="rsg-main" tabindex="-1">
+            <div class="rsg-inner">
+                <nav class="rsg-crumbs" aria-label="Breadcrumb" data-rsg-crumbs></nav>
+                {% include "help/_sections.html" %}
+                <div class="rsg-pager">
+                    <button type="button" class="rsg-btn" data-rsg-prev data-goto=""><i class="bi bi-arrow-left" aria-hidden="true"></i><span>Previous</span></button>
+                    <button type="button" class="rsg-btn rsg-btn-gold" data-rsg-next data-goto=""><span>Next</span><i class="bi bi-arrow-right" aria-hidden="true"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endwith %}
+<script src="{% static 'js/help_guide.js' %}" defer></script>
