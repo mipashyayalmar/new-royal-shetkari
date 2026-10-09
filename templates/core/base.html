@@ -880,14 +880,14 @@
             } else {
                 // An app from before 1.1.0 polls with the key in the URL, which
                 // the server no longer accepts: it must be updated to print.
-                console.warn('Rasova app is out of date: update it to keep printing.');
+                console.warn('The POS app is out of date: update it to keep printing.');
                 if (window.ui && ui.toast && !sessionStorage.getItem('rasova_app_update_shown')) {
                     sessionStorage.setItem('rasova_app_update_shown', '1');
                     ui.toast('Update the POS app on this device to keep printing.', 'warning');
                 }
             }
         } catch (e) {
-            console.warn('Rasova native bridge error:', e);
+            console.warn('POS app bridge error:', e);
         }
     })();
     {% endif %}
@@ -1061,6 +1061,19 @@
         }
     })();
     </script>
+
+    {# "How to Use" help centre: restaurant staff only (never the internal agent role,  #}
+    {# a superuser without a restaurant, or a signed-out guest). The guide itself is    #}
+    {# rendered only when the URL asks for it, so normal pages stay light.             #}
+    {% if user.is_authenticated and user.tenant and user.role and user.role != "agent" %}
+    <a id="rs-help-fab" href="{{ request.path }}?guide=start" class="btn-luxury text-decoration-none d-inline-flex align-items-center gap-2 no-print"
+       style="position:fixed;left:1rem;bottom:1rem;z-index:9980;background:var(--panel-bg);padding:0.45rem 0.85rem;font-size:0.75rem;box-shadow:var(--shadow-soft);"
+       title="How to Use: a step-by-step guide for your role" aria-label="How to Use (help guide)"
+       onclick="if(window.RasovaGuide){event.preventDefault();window.RasovaGuide.open('start');return;}var u=new window.URL(window.location.href);u.searchParams.delete('guide_tour');u.searchParams.set('guide','start');this.href=u.toString();">
+        <i class="bi bi-question-circle" style="color:var(--accent-gold);font-size:1rem;"></i><span class="d-none d-sm-inline">How to Use</span>
+    </a>
+    {% if request.GET.guide or request.GET.guide_tour %}{% include "help/guide.html" %}{% endif %}
+    {% endif %}
 
     {% if user.is_authenticated and user.tenant %}
     <div id="setup-checklist-widget" style="position:fixed;bottom:1.5rem;right:1.5rem;z-index:9990;font-family:var(--font-main,'Outfit',sans-serif);display:none;">

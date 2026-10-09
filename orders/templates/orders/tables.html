@@ -526,7 +526,7 @@
           <td><input type="text" id="editName_${t.id}" class="form-control form-select-luxury py-1 m-0" value="${t.name}"></td>
           <td><input type="text" id="editSection_${t.id}" class="form-control form-select-luxury py-1 m-0" value="${t.section || ''}"></td>
           <td><button class="btn btn-sm btn-outline-secondary py-1" onclick="showQR('${t.name}', '${t.qr_token}')"><i class="bi bi-qr-code"></i></button></td>
-          <td><button class="btn btn-sm btn-dark py-1" onclick="saveTableEdit(${t.id})">Save</button></td>
+          <td><button class="btn btn-sm py-1" style="background:var(--accent-gold);border-color:var(--accent-gold);color:#111;" onclick="saveTableEdit(${t.id})">Save</button></td>
         </tr>`).join('');
     }
   }

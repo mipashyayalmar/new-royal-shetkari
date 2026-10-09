@@ -42,7 +42,7 @@ code changes needed per upload.
 AWS_STORAGE_BUCKET_NAME=rasova-media
 AWS_ACCESS_KEY_ID=<32-char R2 access key id>
 AWS_SECRET_ACCESS_KEY=<R2 secret>
-AWS_S3_ENDPOINT_URL=https://836c606fc06525ba405b92c49ff23845.r2.cloudflarestorage.com
+AWS_S3_ENDPOINT_URL=https://<your-account-id>.r2.cloudflarestorage.com
 AWS_S3_REGION_NAME=auto
 AWS_S3_CUSTOM_DOMAIN=media.rasova.net
 ```

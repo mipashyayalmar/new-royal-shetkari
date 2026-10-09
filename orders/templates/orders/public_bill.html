@@ -146,6 +146,16 @@
   <a class="feedback-link" href="{% url 'public-feedback' feedback_token %}">&#9733; Rate Your Experience</a>
   {% endif %}
 
+  {% if outlet.whatsapp_no %}
+  <div style="text-align:center;margin-top:1.2rem;">
+    {% with wa_msg="Hello, about my bill "|add:order.display_number %}
+    <a href="https://wa.me/{{ outlet.whatsapp_no|cut:' '|cut:'+'|cut:'-' }}?text={{ wa_msg|urlencode }}"
+       target="_blank" rel="noopener"
+       style="display:inline-block;padding:.6rem 1.1rem;background:#25d366;color:#fff;text-decoration:none;font-size:.8rem;letter-spacing:.5px;">
+      Questions? WhatsApp us: {{ outlet.whatsapp_no }}</a>
+    {% endwith %}
+  </div>
+  {% endif %}
   <div class="footer">Royal Shetkari</div>
 </div>
 </body>

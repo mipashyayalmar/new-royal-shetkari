@@ -99,7 +99,7 @@ DB_PORT=5432
 ### 4.1 Clone the repo
 ```bash
 cd /home/ubuntu
-git clone https://github.com/Rajathtuesday/restaurant-pos.git rasova
+git clone https://github.com/mipashyayalmar/new-royal-shetkari.git royal-shetkari
 cd rasova
 ```
 
@@ -315,7 +315,7 @@ cat /etc/nginx/sites-available/rasova
 ## PART 11 — GitHub Actions CI/CD
 
 ### 11.1 Go to GitHub repo settings
-`github.com/Rajathtuesday/restaurant-pos` → **Settings** → **Secrets and variables** → **Actions**
+your GitHub repository → **Settings** → **Secrets and variables** → **Actions**
 
 ### 11.2 Add these 3 secrets
 | Name | Value |
@@ -521,7 +521,7 @@ Logs:             /home/ubuntu/rasova/logs/errors.log
 Landing page:     /home/ubuntu/rasova/public/index.html
 Static files:     /home/ubuntu/rasova/staticfiles/ (after collectstatic)
 Branch to deploy: qsr
-GitHub repo:      github.com/Rajathtuesday/restaurant-pos
+GitHub repo:      github.com/mipashyayalmar/new-royal-shetkari
 Domain:           rasova.net
 ```
 
@@ -543,4 +543,4 @@ Domain:           rasova.net
 
 ---
 
-*Rasova POS · Branch: `qsr` · Founder: Rajath · fortunecloudmentors@gmail.com*
+*Royal Shetkari POS deployment notes*

@@ -19,7 +19,6 @@ Including another URLconf
 from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include
-from django.shortcuts import redirect
 from django.views.generic import TemplateView
 from core import views
 
@@ -37,7 +36,7 @@ def robots_txt(request):
     # Same content on every subdomain (this view isn't tenant-aware), which
     # is what we want: the rules below describe the app's URL *shape*, not
     # any one tenant's data, so they apply identically whether requested on
-    # rasova.net or a real tenant subdomain like spice.rasova.net.
+    # the main site or a tenant subdomain.
     #
     # /menu/ itself is disallowed further down -- it's the staff-facing
     # menu management screen (login-gated, but no reason to spend crawl
@@ -51,7 +50,7 @@ def robots_txt(request):
     # searchable), unlike the rest of the app.
     content = """User-agent: *
 
-# Public — the marketing site
+# Public
 Allow: /
 
 # Public — the customer-facing digital menu (overrides the /menu/
@@ -79,7 +78,7 @@ Disallow: /superuser/
 Disallow: /agency/
 Disallow: /menu/
 
-Sitemap: https://rasova.net/sitemap.xml"""
+Sitemap: {base}/sitemap.xml""".format(base=request.build_absolute_uri("/").rstrip("/"))
     return HttpResponse(content, content_type='text/plain')
 
 def sitemap_xml(request):
@@ -91,19 +90,14 @@ def sitemap_xml(request):
     # than a hand-typed date that goes stale the moment anyone forgets to
     # update it (it had drifted to a 3-month-old date before this fix).
     today = timezone.localdate().isoformat()
+    base = request.build_absolute_uri("/").rstrip("/")
     content = f"""<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://rasova.net/</loc>
+    <loc>{base}/</loc>
     <lastmod>{today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>https://rasova.net/compare/</loc>
-    <lastmod>{today}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
   </url>
 </urlset>"""
     return HttpResponse(content, content_type='application/xml')
@@ -124,11 +118,6 @@ urlpatterns = [
     path('demo/', views.demo_switch, name='demo_switch'),
     path('robots.txt', robots_txt),
     path('sitemap.xml', sitemap_xml),
-    # /compare/petpooja/ existed for ~6 minutes on 2026-07-31 before being
-    # genericized back to /compare/ (af74912) -- if Google indexed it in
-    # that window, this stops it dead-ending in a 404 and consolidates any
-    # indexing signal onto the page that actually exists now.
-    path('compare/petpooja/', lambda r: redirect('/compare/', permanent=True)),
     path('favicon.ico', lambda r: HttpResponse(status=204)),
     # PWA
     path('sw.js', views.serve_sw, name='service_worker'),

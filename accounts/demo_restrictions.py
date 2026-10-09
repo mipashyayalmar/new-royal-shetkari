@@ -14,10 +14,8 @@ from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.utils.http import url_has_allowed_host_and_scheme
 
-WHATSAPP_LINK = "https://wa.me/917899814912?text=Hi%2C%20I%27d%20like%20to%20see%20a%20demo%20of%20Rasova"
 BLOCKED_MESSAGE = (
-    "This is disabled in the live demo. Want to see it in action? "
-    "Message us on WhatsApp."
+    "This is disabled in the demo. Ask the restaurant owner if you need it."
 )
 
 
@@ -60,7 +58,7 @@ def blocked_in_demo_trailer(view_func):
             )
             if wants_json:
                 return JsonResponse({"success": False, "error": BLOCKED_MESSAGE}, status=403)
-            messages.info(request, f"{BLOCKED_MESSAGE} {WHATSAPP_LINK}")
+            messages.info(request, BLOCKED_MESSAGE)
             return redirect(_safe_referer(request))
         return view_func(request, *args, **kwargs)
 

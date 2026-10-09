@@ -13,24 +13,22 @@ request_logger = logging.getLogger("pos.core")
 class SearchIndexingMiddleware:
     """
     Decides which pages search engines may index. Sits before WhiteNoise,
-    because WhiteNoise serves the marketing pages (public/) on every host,
-    so spice.rasova.net/compare/ (and any made-up subdomain) was a copy of
-    rasova.net/compare/, and Google indexed the copy instead of the real
-    one. It had also indexed rasova.net/login/, since nothing said not to.
+    because WhiteNoise serves the welcome page (public/) on every host, and a
+    copy on every subdomain would otherwise be indexed too, as would /login/.
 
-    Indexing is opt-in: only the marketing pages on the main site and the
+    Indexing is opt-in: only the welcome page on the main site (CANONICAL_HOST)
+    and the
     guest menu on a restaurant's own subdomain are indexable. Every other
     HTML page gets "X-Robots-Tag: noindex". The header (not robots.txt) is
     the right tool here: a Disallow in robots.txt stops Google reading the
     page, so it never sees the noindex and can keep the URL indexed.
 
-    On subdomains, the marketing page /compare/ moves to the main site with
-    a 301, and www moves entirely. The home page stays on subdomains (staff
+    www moves to the main site with a 301. The home page stays on subdomains (staff
     open their own subdomain to reach login), it is only marked noindex.
     """
 
-    MARKETING_PATHS = {"/", "/compare/"}
-    MARKETING_ONLY_PATHS = {"/compare/"}
+    MARKETING_PATHS = {"/"}
+    MARKETING_ONLY_PATHS = set()
     GUEST_MENU_PREFIXES = ("/menu/digital-menu/", "/menu/qr/")
 
     def __init__(self, get_response):
@@ -39,6 +37,8 @@ class SearchIndexingMiddleware:
     @classmethod
     def indexable(cls, host, path):
         main = settings.CANONICAL_HOST
+        if not main:  # no main site configured: nothing is indexable
+            return False
         if host == main:
             return path in cls.MARKETING_PATHS
         if host.endswith("." + main):
@@ -49,7 +49,7 @@ class SearchIndexingMiddleware:
         host = request.get_host().split(":")[0].lower()
         main = settings.CANONICAL_HOST
 
-        if request.method in ("GET", "HEAD") and host.endswith("." + main):
+        if main and request.method in ("GET", "HEAD") and host.endswith("." + main):
             if host == "www." + main or request.path in self.MARKETING_ONLY_PATHS:
                 from django.http import HttpResponsePermanentRedirect
                 return HttpResponsePermanentRedirect(f"https://{main}{request.get_full_path()}")
@@ -67,7 +67,7 @@ class TenantMiddleware:
     Resolves request.tenant from the hostname, for host/branding/routing
     purposes only. Deliberately does NOT touch the tenant query-scoping
     context (see core/tenant_context.py) -- a session cookie is valid
-    across every *.rasova.net subdomain (SESSION_COOKIE_DOMAIN), and the
+    across every *.your-domain subdomain (SESSION_COOKIE_DOMAIN), and the
     superuser/portal panel is reachable on any of them, not host-restricted.
     Scoping queries off the subdomain-resolved tenant would make a
     superuser managing tenant B while physically on tenant A's subdomain

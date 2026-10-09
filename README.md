@@ -206,7 +206,7 @@ These figures come from the app's own configuration and measured per-process foo
 ### Installation
 
 ```bash
-git clone https://github.com/Rajathtuesday/restaurant-pos.git rasova
+git clone https://github.com/mipashyayalmar/new-royal-shetkari.git royal-shetkari
 cd rasova
 
 python -m venv .venv

@@ -41,9 +41,9 @@ def _subdomain_redirect(user, path):
     tenant = user.tenant
     if not tenant or not tenant.slug:
         return None
-    base = settings.BASE_URL.rstrip("/")           # e.g. https://rasova.net
+    base = settings.BASE_URL.rstrip("/")           # e.g. https://your-domain
     proto, rest = base.split("://", 1)
-    domain = rest.lstrip("www.").split("/")[0]     # rasova.net
+    domain = rest.lstrip("www.").split("/")[0]     # your-domain
     return f"{proto}://{tenant.slug}.{domain}{path}"
 
 

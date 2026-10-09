@@ -179,7 +179,8 @@ class Seeder:
             self._first[Outlet] = True
         outlet = outlet or self.get_or_create(Outlet, {"tenant": tenant, "name": OUTLET_NAME}, {
             "address": "SAMPLE ADDRESS - Shetkari Chowk, Pune 411001 (update in Setup > Outlet Settings)",
-            "phone": "+91 90000 00000",
+            "phone": "+91 91723 53945",
+            "whatsapp_no": "+91 91723 53945",
             "email": "hello@royalshetkari.example.com",
             "bill_code": "RS",
             "opening_time": time(11, 0), "closing_time": time(23, 30),

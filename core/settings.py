@@ -72,8 +72,8 @@ DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 # Single-restaurant install on a Windows PC (setup.bat / start.bat): served
 # over plain http on the shop's own network by waitress, data in SQLite next
-# to the code. Turns off what only makes sense for the hosted rasova.net
-# service (https-only cookies, *.rasova.net cookie domain, subdomain
+# to the code. Turns off what only makes sense for the hosted your-domain
+# service (https-only cookies, *.your-domain cookie domain, subdomain
 # redirects, the PostgreSQL requirement) while DEBUG stays off.
 _LOCAL_INSTALL_PC = os.getenv('LOCAL_INSTALL', 'False') == 'True'
 # The test suite checks the hosted behaviour, whatever this PC's .env says
@@ -102,7 +102,7 @@ else:
 
 # The main site's host. Marketing pages are indexable only here; see
 # core.middleware.SearchIndexingMiddleware.
-CANONICAL_HOST = os.getenv('CANONICAL_HOST', 'rasova.net')
+CANONICAL_HOST = os.getenv('CANONICAL_HOST', '')
 
 # Cloudflare / reverse-proxy: trust forwarded headers for HTTPS detection
 USE_X_FORWARDED_HOST    = True
@@ -277,7 +277,7 @@ WHITENOISE_ROOT        = BASE_DIR / 'public'
 WHITENOISE_INDEX_FILE  = True
 if LOCAL_INSTALL:
     # The restaurant's own PC opens straight on its login page, not the
-    # rasova.net marketing site in public/ (core.views.landing redirects).
+    # welcome page in public/ (core.views.landing redirects).
     WHITENOISE_ROOT = None
 
 MEDIA_URL = '/media/'
@@ -357,20 +357,20 @@ elif not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
 
-    # Wildcard covers all tenant subdomains (https://*.rasova.net)
+    # Wildcard covers all tenant subdomains (https://*.your-domain)
     # Falls back to env var for custom domains
-    _raw_csrf_origins = os.environ.get('CSRF_TRUSTED_ORIGINS', 'https://*.rasova.net,https://rasova.net')
+    _raw_csrf_origins = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
     CSRF_TRUSTED_ORIGINS = [o.strip() for o in _raw_csrf_origins.split(',') if o.strip()]
 
     # Without an explicit cookie domain, a cookie is scoped to the EXACT host
     # that set it. auth_views.py redirects a user from the apex/login host to
-    # their tenant's own subdomain (tenant-slug.rasova.net) after login — a
+    # their tenant's own subdomain (tenant-slug.your-domain) after login — a
     # user who authenticates anywhere other than that exact subdomain (the
     # apex domain, or a host TenantMiddleware didn't resolve) would silently
     # not have their session cookie sent to the subdomain they're redirected
     # to. The leading dot makes the cookie valid for the base domain AND every
     # tenant subdomain, matching CSRF_TRUSTED_ORIGINS's wildcard above.
-    _cookie_domain = os.environ.get('SESSION_COOKIE_DOMAIN', '.rasova.net')
+    _cookie_domain = os.environ.get('SESSION_COOKIE_DOMAIN') or None
     SESSION_COOKIE_DOMAIN = _cookie_domain
     CSRF_COOKIE_DOMAIN = _cookie_domain
 
@@ -378,8 +378,8 @@ elif not DEBUG:
     # comment. The rename itself was originally motivated by exactly this
     # domain-scoping change: any browser that had already logged in BEFORE
     # the domain-wide cookie above was deployed still had an old csrftoken
-    # cookie scoped to the exact host (e.g. spice.rasova.net) alongside the
-    # new one scoped to .rasova.net. Both were valid, both got sent, and the
+    # cookie scoped to the exact host (e.g. spice.your-domain) alongside the
+    # new one scoped to .your-domain. Both were valid, both got sent, and the
     # JS reading document.cookie and Django's own request.COOKIES parsing
     # weren't guaranteed to pick the same one of the two — producing a
     # persistent, unexplained "CSRF token from header incorrect" 403 on
@@ -724,7 +724,7 @@ EMAIL_PORT          = 587
 EMAIL_USE_TLS       = True
 EMAIL_HOST_USER     = os.getenv("EMAIL_USER", "")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_PASSWORD", "")
-DEFAULT_FROM_EMAIL  = os.getenv("EMAIL_USER", "noreply@rasova.net")
+DEFAULT_FROM_EMAIL  = os.getenv("EMAIL_USER", "noreply@localhost")
 
 # -------------------------------------------------------
 # SESSION — long enough for a full 12-hour QSR shift.
