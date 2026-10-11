@@ -48,6 +48,26 @@ payment secrets can't be read.
 3. In a Bash console: `bash ~/royal-shetkari/scripts/pythonanywhere/deploy.sh`.
 4. Press **Reload** on the Web tab.
 
+### Small updates through the API
+
+For template or static-file changes (no new packages, no migrations), skip the zip:
+upload each changed file with the Files API and reload the web app. Create the API token
+on the Account page (API token tab) and keep it in an environment variable, never in git.
+
+```bash
+B=https://www.pythonanywhere.com/api/v0/user/Royalhotel
+R=/home/Royalhotel/royal-shetkari
+curl -H "Authorization: Token $PA_TOKEN" -F "content=@templates/core/base.html"      "$B/files/path$R/templates/core/base.html"
+# static files go to both static/ and staticfiles/ (the folder that's served)
+curl -X POST -H "Authorization: Token $PA_TOKEN" "$B/webapps/royalhotel.pythonanywhere.com/reload/"
+```
+
+## Installing on phones
+
+The site is an installable web app. On Android open it in Chrome and tap **Install App**
+under Sign In, or use **⋮ > Install app**. The manifest is `templates/manifest.json`, the
+icons are in `static/icons/`, and the service worker is `static/sw.js`.
+
 ## Before anyone outside the team uses it
 
 - Give every account its own strong password (Setup > Staff). The superuser accounts

@@ -12,7 +12,8 @@
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">
-    <link rel="apple-touch-icon" href="{% static 'icon-512.svg' %}">
+    <link rel="apple-touch-icon" href="{% static 'icons/apple-touch-icon.png' %}">
+    <meta name="mobile-web-app-capable" content="yes">
     <link rel="manifest" href="/manifest.json">
 
     <!-- Google Fonts — Outfit (body) · DM Serif Display (headings) · Space Mono (mono) -->
@@ -910,11 +911,28 @@
 
         // ── Install prompt ──────────────────────────────────────────────────────
         // No "Install" banner: the browser's own install prompt is held back so
-        // it never covers the bottom of the POS screens. The app can still be
-        // installed from the browser menu.
-        window.addEventListener('beforeinstallprompt', e => e.preventDefault());
+        // it never covers the bottom of the POS screens. Instead a small
+        // "Install App" button (#rs-install-btn, above "How to Use") appears
+        // while the app is installable; the browser menu works too.
+        let deferredInstallPrompt = null;
+        window.addEventListener('beforeinstallprompt', e => {
+            e.preventDefault();
+            deferredInstallPrompt = e;
+            const btn = document.getElementById('rs-install-btn');
+            if (btn) btn.style.display = 'inline-flex';
+        });
+        window.rsInstallApp = async () => {
+            if (!deferredInstallPrompt) return;
+            deferredInstallPrompt.prompt();
+            await deferredInstallPrompt.userChoice;
+            deferredInstallPrompt = null;
+            const btn = document.getElementById('rs-install-btn');
+            if (btn) btn.style.display = 'none';
+        };
 
         window.addEventListener('appinstalled', () => {
+            const btn = document.getElementById('rs-install-btn');
+            if (btn) btn.style.display = 'none';
             showPostInstallSheet();
         });
 
@@ -1073,6 +1091,15 @@
         <i class="bi bi-question-circle" style="color:var(--accent-gold);font-size:1rem;"></i><span class="d-none d-sm-inline">How to Use</span>
     </a>
     {% if request.GET.guide or request.GET.guide_tour %}{% include "help/guide.html" %}{% endif %}
+    {% endif %}
+
+    {% if user.is_authenticated %}
+    <button type="button" id="rs-install-btn" onclick="window.rsInstallApp && window.rsInstallApp()"
+            class="btn-luxury align-items-center gap-2 no-print"
+            style="display:none;position:fixed;left:1rem;bottom:3.75rem;z-index:9980;background:var(--panel-bg);padding:0.45rem 0.85rem;font-size:0.75rem;box-shadow:var(--shadow-soft);"
+            title="Install Royal Shetkari as an app on this device" aria-label="Install App">
+        <i class="bi bi-download" style="color:var(--accent-gold);font-size:1rem;"></i><span class="d-none d-sm-inline">Install App</span>
+    </button>
     {% endif %}
 
     {% if user.is_authenticated and user.tenant %}

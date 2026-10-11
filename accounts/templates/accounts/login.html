@@ -6,6 +6,10 @@
   <title>{% if tenant %}{{ tenant.name }} — Staff Login{% else %}Royal Shetkari — Login{% endif %}</title>
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
   <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
+  <meta name="theme-color" content="#0a0a0a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -282,6 +286,13 @@
     }
     .btn-login:hover { background: var(--gold-h); }
     .btn-login:active { transform: scale(0.99); }
+    .btn-install {
+      width: 100%; height: 46px; margin-top: 0.75rem;
+      background: transparent; border: 1px solid var(--gold);
+      color: var(--gold); font-family: 'Outfit', sans-serif;
+      font-size: 0.75rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 2px; cursor: pointer;
+    }
 
     .error-box {
       border: 1px dashed var(--err);
@@ -417,6 +428,9 @@
           Sign In &nbsp;→
         </button>
       </form>
+      <button type="button" id="installAppBtn" class="btn-install" hidden>
+        <i class="bi bi-download"></i>&nbsp; Install App
+      </button>
 
     </div>
 
@@ -445,6 +459,27 @@
       icon.classList.toggle("bi-sun", dark);
       icon.classList.toggle("bi-moon", !dark);
     }
+
+    // Installable app (Chrome on Android / desktop): register the service
+    // worker here too, since the login page is the first page a phone sees.
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {});
+    }
+    let installPrompt = null;
+    const installBtn = document.getElementById("installAppBtn");
+    window.addEventListener("beforeinstallprompt", e => {
+      e.preventDefault();
+      installPrompt = e;
+      installBtn.hidden = false;
+    });
+    installBtn.addEventListener("click", async () => {
+      if (!installPrompt) return;
+      installPrompt.prompt();
+      await installPrompt.userChoice;
+      installPrompt = null;
+      installBtn.hidden = true;
+    });
+    window.addEventListener("appinstalled", () => { installBtn.hidden = true; });
   </script>
 </body>
 </html>
