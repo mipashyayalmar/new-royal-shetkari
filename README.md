@@ -1,24 +1,114 @@
-# Rasova - Restaurant POS Platform
+# Royal Shetkari - Restaurant POS
 
-> Cloud-based POS and restaurant management system for Indian restaurants.  
-> Django 6.0 · PostgreSQL · Celery + Redis · Multi-tenant SaaS · ESC/POS thermal printing.
+> Restaurant POS and management system for Indian restaurants: floor plan, KOT, kitchen display, billing, thermal printing, QR ordering, inventory and reports.
+> Django 6.0 · SQLite / PostgreSQL · Celery + Redis · Multi-tenant · ESC/POS thermal printing · Installable app (PWA).
+
+| | |
+|---|---|
+| **Live app** | **[royalhotel.pythonanywhere.com](https://royalhotel.pythonanywhere.com)** |
+| **Source code** | [github.com/mipashyayalmar/new-royal-shetkari](https://github.com/mipashyayalmar/new-royal-shetkari) |
+| **Hosting** | PythonAnywhere (Python 3.13, SQLite), see [`docs/PYTHONANYWHERE.md`](docs/PYTHONANYWHERE.md) |
+| **Restaurant** | Royal Shetkari - Main Restaurant |
+| **Author** | [Prasad Ganesh Yalmar](https://github.com/mipashyayalmar) |
 
 See [`CHANGELOG.md`](CHANGELOG.md) for what's changed recently.
 
 > **Royal Shetkari (Windows PC install):** double-click `setup.bat` once, then `start.bat` daily.
 > Guide: [`WINDOWS_SETUP.md`](WINDOWS_SETUP.md). What changed: [`ROYAL_SHETKARI_CHANGES.md`](ROYAL_SHETKARI_CHANGES.md).
 
+---
+
+## Live Demo
+
+The live copy runs on PythonAnywhere at **https://royalhotel.pythonanywhere.com**. It is a test copy for trying the software. Use the restaurant's PC install for real billing.
+
+### Test logins
+
+Every account below uses the password **`admin@123`**.
+
+| Username | Role | What it opens |
+|---|---|---|
+| `rs_owner` | Owner | Everything for the restaurant: floor plan, billing, reports, setup, staff |
+| `rs_manager` | Manager | Floor plan, billing, discounts, refunds, reports, shifts |
+| `rs_cashier1`, `rs_cashier2` | Cashier | Billing, payments, token counter, shifts |
+| `rs_captain` | Captain | Floor plan, orders, table combine and transfer |
+| `rs_waiter1`, `rs_waiter2`, `rs_waiter3` | Waiter | Floor plan, new orders, waiter calls |
+| `rs_chef1`, `rs_chef2` | Chef | Kitchen display (KOT) |
+| `prasad`, `admin` | Superuser | Platform admin: `/superuser/` panel and `/admin/` |
+
+> **Warning:** these are shared test passwords published in a public repository, so anyone can sign in with them.
+> Before real use, change them in **Setup > Staff** or run
+> `python manage.py seed_royal_shetkari --reset-demo-passwords`.
+> The UPI QR on the bill screen is the restaurant's real PhonePe QR, so test payments move real money.
+
+### Screens on the live site
+
+Sign in first, then open:
+
+| Screen | Link |
+|---|---|
+| Login | [/login/](https://royalhotel.pythonanywhere.com/login/) |
+| Floor plan (tables, new order, add, bill) | [/dashboard/](https://royalhotel.pythonanywhere.com/dashboard/) |
+| Tables setup | [/tables/](https://royalhotel.pythonanywhere.com/tables/) |
+| Live orders | [/live-orders/](https://royalhotel.pythonanywhere.com/live-orders/) |
+| Billing | [/billing/](https://royalhotel.pythonanywhere.com/billing/) |
+| Kitchen display (KOT) | [/kitchen/](https://royalhotel.pythonanywhere.com/kitchen/) |
+| Combine tables | [/merge-tables/](https://royalhotel.pythonanywhere.com/merge-tables/) |
+| Transfer table | [/transfer-table/](https://royalhotel.pythonanywhere.com/transfer-table/) |
+| QSR token counter | [/token/](https://royalhotel.pythonanywhere.com/token/) |
+| Order history and CSV export | [/history/](https://royalhotel.pythonanywhere.com/history/) |
+| Reports dashboard | [/reports/dashboard/](https://royalhotel.pythonanywhere.com/reports/dashboard/) |
+| Sales | [/sales/](https://royalhotel.pythonanywhere.com/sales/) |
+| Shifts and Z-report | [/shifts/](https://royalhotel.pythonanywhere.com/shifts/) |
+| Menu management | [/menu/](https://royalhotel.pythonanywhere.com/menu/) |
+| Table QR codes | [/setup/qr-codes/](https://royalhotel.pythonanywhere.com/setup/qr-codes/) |
+| Setup | [/setup/](https://royalhotel.pythonanywhere.com/setup/) |
+| Customers (CRM) | [/crm/](https://royalhotel.pythonanywhere.com/crm/) |
+| Superuser panel | [/superuser/](https://royalhotel.pythonanywhere.com/superuser/) |
+| Django admin | [/admin/](https://royalhotel.pythonanywhere.com/admin/) |
+
+On any screen, the **How to Use** button (bottom left) opens a step-by-step guide for your role.
+
+### Install as an app (Android, Chrome)
+
+Royal Shetkari is a Progressive Web App, so it installs from Chrome with no Play Store download.
+
+1. On the Android phone or tablet, open **Chrome** and go to https://royalhotel.pythonanywhere.com
+2. Tap **Install App** under the Sign In button. You can also use Chrome's **⋮** menu and choose **Install app** (or **Add to Home screen**).
+3. Confirm **Install**. A gold-diamond **Royal Shetkari** icon appears on the home screen and in the app drawer.
+4. Open it from the icon. It runs full screen without the browser bar, and opens straight to the floor plan once you are signed in.
+
+After sign-in, an **Install App** button also appears above **How to Use** while the app isn't installed yet.
+
+- **Windows / Mac (Chrome or Edge):** click the install icon at the right of the address bar, or **⋮ > Cast, save and share > Install page as app**.
+- **iPhone / iPad (Safari):** tap **Share > Add to Home Screen**.
+
+What makes it installable: [`templates/manifest.json`](templates/manifest.json) (name, colours, start page `/dashboard/`, PNG icons 192/512 plus a maskable icon in [`static/icons/`](static/icons/)), and the service worker [`static/sw.js`](static/sw.js). The login page and every app page register the service worker.
+
+> Printing from the phone needs the Print Agent running on a PC on the same network (the orange "Agent offline" banner means it isn't). See [`PRINTING_SYSTEM.md`](PRINTING_SYSTEM.md) and [`docs/PRINTER_SETUP.md`](docs/PRINTER_SETUP.md).
+
+### Deploying updates to the live site
+
+Full guide: [`docs/PYTHONANYWHERE.md`](docs/PYTHONANYWHERE.md). In short:
+
+1. `git archive -o royal_shetkari_release.zip HEAD` and upload it to the PythonAnywhere home folder (Files tab).
+2. In a PythonAnywhere Bash console: `bash ~/royal-shetkari/scripts/pythonanywhere/deploy.sh` (installs packages, backs up the database, migrates, collects static files).
+3. Press **Reload** on the Web tab.
+
+For template or static-only changes you can upload the changed files through the PythonAnywhere Files API and reload with `POST /api/v0/user/<user>/webapps/<domain>/reload/`. Keep the API token in an environment variable (`PA_TOKEN`). Never commit it.
 
 ---
 
-## What Is Rasova
+## What Is Royal Shetkari
 
-Rasova is a full-stack restaurant management platform built for Indian restaurants - fine dining, QSR counters, and cafés. It handles the complete order lifecycle: table management, kitchen tickets, billing, thermal printing, inventory, reports, and an order history with a full audit trail.
+Royal Shetkari is a full-stack restaurant management platform built for Indian restaurants - fine dining, QSR counters, and cafés. It handles the complete order lifecycle: table management, kitchen tickets, billing, thermal printing, inventory, reports, and an order history with a full audit trail.
 
-Two things that make it different from existing Indian POS software:
+Highlights:
 
 1. **AI menu import** - photograph any printed or handwritten menu → Gemini AI imports all items, categories, and prices in under 60 seconds. No manual data entry.
-2. **Design** - built to look good. The billing screen, kitchen display, and QR menu are all significantly cleaner than Petpooja or POSist.
+2. **Design** - a clean dark/light interface for the billing screen, kitchen display, and QR menu.
+3. **Installable** - runs as an app on Android, Windows and iPhone straight from the browser.
+4. **WhatsApp receipts** - send the bill to the customer's WhatsApp.
 
 ---
 
@@ -141,7 +231,7 @@ Each type gets its own default feature set. Owners and superusers can override i
 ## Project Structure
 
 ```
-f:\pos\
+royal-shetkari/
 ├── accounts/           User auth, roles, login, dashboard, superuser panel
 │   └── views/          auth_views, dashboard_views, feature_views, superuser_views
 ├── agency/             Multi-client agency management
@@ -207,7 +297,7 @@ These figures come from the app's own configuration and measured per-process foo
 
 ```bash
 git clone https://github.com/mipashyayalmar/new-royal-shetkari.git royal-shetkari
-cd rasova
+cd royal-shetkari
 
 python -m venv .venv
 # Windows:
@@ -349,7 +439,7 @@ Bucket setup, the one-time server steps, the restore procedure and troubleshooti
 
 ## Thermal Printing Architecture
 
-Rasova supports two printing modes:
+Royal Shetkari supports two printing modes:
 
 **Browser printing** (zero local installation):
 ```
@@ -478,6 +568,8 @@ Business logic lives in `orders/services/` - 9 service modules, none of which kn
 - [x] Order status for QR-ordering guests - a floating status button + slide-up sheet with a live Received → Preparing → Ready → Served timeline, replacing a banner that used to sit under the header and push the whole menu down
 - [x] Subscription billing - monthly invoices for restaurants with Razorpay payment links, delivered by WhatsApp and email
 - [x] WhatsApp bill delivery - customer receipts and subscription invoices through Twilio or the Meta Cloud API
+- [x] Installable app (PWA) - PNG icons, install button on the login page and in the app, works on Android Chrome
+- [x] Live test copy on PythonAnywhere - https://royalhotel.pythonanywhere.com
 - [x] Self-serve live demo - `/live-demo/` signs a visitor into a seeded demo restaurant that resets every 2 hours
 - [x] Point-in-time database recovery - WAL archiving plus weekly base backups to R2, with a 15-minute health check
 
@@ -492,7 +584,7 @@ Business logic lives in `orders/services/` - 9 service modules, none of which kn
 ## License
 
 Proprietary. All rights reserved.  
-© 2026 Rasova. Built in Bengaluru.
+© 2026 Prasad Ganesh Yalmar - Royal Shetkari.
 
 ---
 

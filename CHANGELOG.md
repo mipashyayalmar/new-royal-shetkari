@@ -7,6 +7,17 @@ the source of truth.
 
 ---
 
+## 2026-10-11: Install the app on Android
+
+### Fixed
+- **Chrome on Android offers "Install app".** The manifest only listed SVG icons, which Android Chrome won't accept, and the login page (the first page a phone sees) never registered the service worker. New PNG icons in `static/icons/` (192, 512, maskable 512, apple-touch 180); `templates/manifest.json` gains `id`, `scope` and the PNG icons; the login page registers `/sw.js` and links the icons.
+
+### Added
+- **Install App button.** It appears under Sign In on the login page and above "How to Use" inside the app, but only while the browser says the app can be installed. The browser's own pop-up banner stays suppressed.
+- **README: live site section.** Live link, test logins, links to every main screen, install steps and how to deploy to PythonAnywhere.
+
+---
+
 ## 2026-10-06: Search indexing
 
 ### Fixed
