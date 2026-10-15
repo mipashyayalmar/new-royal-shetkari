@@ -155,6 +155,76 @@ class CreateQRPaymentServiceTest(CounterBillingBase):
         self.assertEqual(qr.quoted_amount, order.grand_total)
 
 
+def _rzp_response(status_code, body):
+    return MagicMock(status_code=status_code, json=lambda: body)
+
+
+QR_NOT_ENABLED = _rzp_response(400, {"error": {
+    "code": "BAD_REQUEST_ERROR", "description": "The requested URL was not found on the server."}})
+
+
+class PaymentLinkFallbackTest(CounterBillingBase):
+    """Accounts without Razorpay's QR Codes API get a Payment Link instead."""
+
+    def setUp(self):
+        super().setUp()
+        self.config = PaymentConfig.objects.get(outlet=self.outlet)
+        self.config.razorpay_enabled = True
+        self.config.razorpay_key_id = "rzp_test_key"
+        self.config.razorpay_key_secret = "rzp_test_secret"
+        self.config.save()
+
+    @patch("payments.razorpay_gateway.requests.post")
+    def test_falls_back_to_a_payment_link(self, mock_post):
+        mock_post.side_effect = [
+            QR_NOT_ENABLED,
+            _rzp_response(200, {"id": "plink_abc", "short_url": "https://rzp.io/rzp/abc"}),
+        ]
+        order = self._make_order()
+        qr = create_qr_payment(order, self.config, requested_amount=Decimal("76.00"))
+
+        self.assertEqual(qr.qr_code_id, "plink_abc")
+        self.assertEqual(qr.image_url, "https://rzp.io/rzp/abc")
+        self.assertEqual(qr.quoted_amount, Decimal("76.00"))
+        args, kwargs = mock_post.call_args
+        self.assertTrue(args[0].endswith("/payment_links"))
+        self.assertEqual(kwargs["json"]["amount"], 7600)
+        self.assertEqual(kwargs["json"]["notes"]["order_id"], str(order.id))
+        self.assertEqual(kwargs["auth"], ("rzp_test_key", "rzp_test_secret"))
+        # Razorpay rejects links that expire less than 15 minutes ahead.
+        self.assertGreater(kwargs["json"]["expire_by"], timezone.now().timestamp() + 15 * 60)
+
+    @patch("payments.razorpay_gateway.requests.post")
+    def test_other_razorpay_errors_are_raised_with_their_description(self, mock_post):
+        from payments.razorpay_gateway import RazorpayAPIError
+        mock_post.return_value = _rzp_response(401, {"error": {"description": "Authentication failed"}})
+        with self.assertRaisesMessage(RazorpayAPIError, "Authentication failed"):
+            create_qr_payment(self._make_order(), self.config)
+        self.assertEqual(mock_post.call_count, 1)  # no fallback for a bad key
+
+    @patch("payments.razorpay_gateway.requests.post")
+    def test_view_returns_a_qr_image_and_the_link(self, mock_post):
+        TenantFeatureOverride.objects.create(tenant=self.tenant, feature="razorpay_gateway", enabled=True)
+        mock_post.side_effect = [
+            QR_NOT_ENABLED,
+            _rzp_response(200, {"id": "plink_v", "short_url": "https://rzp.io/rzp/v"}),
+        ]
+        order = self._make_order()
+        data = self.client.post(reverse("razorpay-create-qr", args=[order.id])).json()
+
+        self.assertEqual(data["qr_code_id"], "plink_v")
+        self.assertEqual(data["pay_url"], "https://rzp.io/rzp/v")
+        self.assertTrue(data["image_url"].startswith("data:image/png;base64,"))
+
+    @patch("payments.razorpay_gateway.requests.post")
+    def test_view_shows_what_razorpay_said(self, mock_post):
+        TenantFeatureOverride.objects.create(tenant=self.tenant, feature="razorpay_gateway", enabled=True)
+        mock_post.return_value = _rzp_response(401, {"error": {"description": "Authentication failed"}})
+        response = self.client.post(reverse("razorpay-create-qr", args=[self._make_order().id]))
+        self.assertEqual(response.status_code, 502)
+        self.assertEqual(response.json()["error"], "Razorpay: Authentication failed")
+
+
 class CreateRazorpayQRViewTest(CounterBillingBase):
 
     def setUp(self):
@@ -373,6 +443,57 @@ class RazorpayWebhookTest(CounterBillingBase):
 
         table.refresh_from_db()
         self.assertEqual(table.state, "free")
+
+    def _link_paid_payload(self, order, payment_id="pay_link", method="upi"):
+        return {
+            "event": "payment_link.paid",
+            "payload": {
+                "payment_link": {"entity": {
+                    "id": "plink_xyz",
+                    "notes": {
+                        "order_id": str(order.id),
+                        "tenant_id": str(self.tenant.id),
+                        "outlet_id": str(self.outlet.id),
+                    },
+                }},
+                "payment": {"entity": {
+                    "id": payment_id, "amount": decimal_to_paise(order.grand_total), "method": method,
+                }},
+            },
+        }
+
+    def test_payment_link_paid_records_payment_and_closes_order(self):
+        order = self._make_order()
+        link = RazorpayQRCode.objects.create(
+            tenant=self.tenant, outlet=self.outlet, order=order,
+            qr_code_id="plink_xyz", image_url="https://rzp.io/rzp/xyz",
+            quoted_amount=order.grand_total, status="active", expires_at=timezone.now(),
+        )
+        response = self._post_webhook(self._link_paid_payload(order, payment_id="pay_l1"))
+
+        self.assertEqual(response.status_code, 200)
+        order.refresh_from_db()
+        self.assertEqual(order.status, "closed")
+        self.assertEqual(Payment.objects.get(reference="pay_l1").method, "upi")
+        link.refresh_from_db()
+        self.assertEqual(link.status, "paid")
+
+    def test_payment_link_paid_by_card_is_booked_as_card(self):
+        order = self._make_order()
+        self._post_webhook(self._link_paid_payload(order, payment_id="pay_card", method="card"))
+        self.assertEqual(Payment.objects.get(reference="pay_card").method, "card")
+
+    def test_payment_link_expired_marks_expired(self):
+        order = self._make_order()
+        link = RazorpayQRCode.objects.create(
+            tenant=self.tenant, outlet=self.outlet, order=order,
+            qr_code_id="plink_old", image_url="https://rzp.io/rzp/old",
+            quoted_amount=order.grand_total, status="active", expires_at=timezone.now(),
+        )
+        payload = {"event": "payment_link.expired", "payload": {"payment_link": {"entity": {"id": "plink_old"}}}}
+        self.assertEqual(self._post_webhook(payload).status_code, 200)
+        link.refresh_from_db()
+        self.assertEqual(link.status, "expired")
 
     def test_qr_marked_paid_after_credit(self):
         order = self._make_order()
