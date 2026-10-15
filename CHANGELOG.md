@@ -7,6 +7,16 @@ the source of truth.
 
 ---
 
+## 2026-10-16: Razorpay Payment Links
+
+### Added
+- **Razorpay works without the QR Codes API.** Razorpay enables `/payments/qr_codes` per account on request; until then it answers "The requested URL was not found". The bill's Razorpay button now falls back to a Payment Link for the same amount: the bill shows a QR of the link (UPI, card or net banking) and the link itself to send on WhatsApp. The existing webhook handles `payment_link.paid` like `qr_code.credited` (card payments are booked as Card), and `payment_link.expired` / `cancelled` like `qr_code.closed`. No migration: links are tracked in `RazorpayQRCode` (`plink_` ids).
+
+### Fixed
+- **"Could not reach Razorpay" for every error.** When Razorpay answers with an error (wrong key, feature off) the bill now shows Razorpay's own message instead.
+
+---
+
 ## 2026-10-16: Public website for Razorpay
 
 ### Added

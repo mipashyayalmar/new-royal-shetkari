@@ -600,6 +600,18 @@ renderUpiQR({{ remaining }});
             const amount = amtEl && amtEl.value ? amtEl.value : {{ remaining }};
             const data = await apiClient.post('{% url "razorpay-create-qr" order.id %}', { amount });
             area.innerHTML = `<img src="${data.image_url}" alt="Razorpay UPI QR" style="width:280px;height:280px;image-rendering:pixelated;">`;
+            // A Payment Link (accounts without Razorpay's QR Codes API): the
+            // QR opens Razorpay's pay page, and the link can be sent on WhatsApp.
+            document.getElementById('razorpay-qr-header').textContent =
+                data.pay_url ? 'Scan to pay: UPI, card or net banking' : 'Scan with any UPI app';
+            if (data.pay_url) {
+                const link = document.createElement('a');
+                link.href = data.pay_url; link.target = '_blank'; link.rel = 'noopener';
+                link.textContent = data.pay_url;
+                link.style.cssText = 'display:block;margin-top:0.6rem;font-size:0.8rem;color:var(--accent-gold);word-break:break-all;';
+                area.style.flexDirection = 'column';
+                area.appendChild(link);
+            }
 
             const expiresAt = new Date(data.expires_at).getTime();
             _razorpayPollTimer = setInterval(async () => {
@@ -629,6 +641,13 @@ renderUpiQR({{ remaining }});
             }, 3000);
         } catch (e) {
             area.innerHTML = '<span style="color:#dc2626;font-size:0.85rem;">Could not generate QR</span>';
+            if (e && e.message) {
+                const why = document.createElement('div');
+                why.textContent = e.message;
+                why.style.cssText = 'color:var(--text-muted);font-size:0.78rem;margin-top:0.5rem;';
+                area.style.flexDirection = 'column';
+                area.appendChild(why);
+            }
             status.textContent = 'Tap Regenerate to try again';
         }
     }

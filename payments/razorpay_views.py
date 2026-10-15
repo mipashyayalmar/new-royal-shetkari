@@ -21,7 +21,10 @@ from core.validators import NumberInputError, positive_int, read_number
 from orders.models import Order, OrderEvent, Payment
 from payments.models import RazorpayQRCode
 from orders.services.payment_service import process_payment
-from payments.razorpay_gateway import create_qr_payment, verify_webhook_signature, paise_to_decimal
+from payments.razorpay_gateway import (
+    RazorpayAPIError, create_qr_payment, is_payment_link, paise_to_decimal, qr_image_data_uri,
+    verify_webhook_signature,
+)
 from setup.models import PaymentConfig
 from tenants.models import Outlet
 
@@ -93,10 +96,23 @@ def create_razorpay_qr(request, order_id):
 
     try:
         qr = create_qr_payment(order, config, requested_amount=requested_amount)
+    except RazorpayAPIError as e:
+        # Razorpay answered, so "could not reach" would send the owner
+        # chasing network problems; show what Razorpay actually said
+        # (e.g. "Authentication failed" for a wrong key).
+        logger.error("Razorpay QR creation failed for order %s: %s", order_id, e)
+        return JsonResponse({"error": f"Razorpay: {e}"}, status=502)
     except requests.RequestException as e:
         logger.error("Razorpay QR creation failed for order %s: %s", order_id, e)
         return JsonResponse({"error": "Could not reach Razorpay. Please try again."}, status=502)
 
+    if is_payment_link(qr):
+        return JsonResponse({
+            "qr_code_id": qr.qr_code_id,
+            "image_url": qr_image_data_uri(qr.image_url),
+            "pay_url": qr.image_url,
+            "expires_at": qr.expires_at.isoformat(),
+        })
     return JsonResponse({
         "qr_code_id": qr.qr_code_id,
         "image_url": qr.image_url,
@@ -180,10 +196,15 @@ def razorpay_webhook(request):
 
     event = payload.get("event", "")
 
+    # Which Razorpay object the bill was shown as: a UPI QR, or a Payment
+    # Link (accounts without the QR Codes API, see razorpay_gateway). Both
+    # carry the notes set at creation and are tracked as RazorpayQRCode.
+    source = "payment_link" if event.startswith("payment_link.") else "qr_code"
+
     # QR closed/expired without payment — no-op, not an error. Razorpay
     # retries on non-2xx, so always return 200 for events we don't act on.
-    if event in ("qr_code.closed",):
-        qr_code_id = _entity(payload, "qr_code").get("id")
+    if event in ("qr_code.closed", "payment_link.expired", "payment_link.cancelled"):
+        qr_code_id = _entity(payload, source).get("id")
         # Scoped by tenant+outlet even though qr_code_id is already a Razorpay-
         # issued unique string — a valid signature only proves the caller knows
         # *this* outlet's webhook secret, not that qr_code_id belongs to it.
@@ -192,20 +213,24 @@ def razorpay_webhook(request):
         ).update(status="expired")
         return JsonResponse({"ok": True})
 
-    if event != "qr_code.credited":
-        # Only QR-based payments are wired up — other events (direct payment
-        # links, etc.) aren't part of this flow.
+    if event not in ("qr_code.credited", "payment_link.paid"):
+        # Only bill QRs and bill payment links are wired up — every other
+        # event the account sends is acknowledged and ignored.
         return JsonResponse({"ok": True})
 
-    # qr_code.credited payload shape: the QR entity carries the `notes` we set
-    # at creation time; the payment entity carries the actual transaction id
-    # and amount. Notes are NOT mirrored onto the payment entity.
-    qr_entity = _entity(payload, "qr_code")
+    # Payload shape (both events): the QR / payment-link entity carries the
+    # `notes` we set at creation time; the payment entity carries the actual
+    # transaction id, amount and method. Notes are NOT mirrored onto the
+    # payment entity.
+    qr_entity = _entity(payload, source)
     payment_entity = _entity(payload, "payment")
     notes = qr_entity.get("notes") if isinstance(qr_entity.get("notes"), dict) else {}
     razorpay_payment_id = payment_entity.get("id")
     if not isinstance(razorpay_payment_id, str):
         razorpay_payment_id = None
+    # A payment link can also be paid by card; everything else Razorpay
+    # takes (UPI, net banking, wallets) is booked as UPI, as QR payments are.
+    method = "card" if payment_entity.get("method") == "card" else "upi"
     order_id = positive_int(notes.get("order_id"))
     # Paise, a positive whole number. A non-number used to reach int() and
     # 500, and Razorpay retries a non-2xx for a day.
@@ -261,7 +286,7 @@ def razorpay_webhook(request):
                 # The money is real and sitting in the restaurant's Razorpay account —
                 # it must leave an audit trail, never silently disappear.
                 Payment.objects.create(
-                    order=order, method="upi", amount=webhook_amount, reference=razorpay_payment_id,
+                    order=order, method=method, amount=webhook_amount, reference=razorpay_payment_id,
                 )
                 OrderEvent.objects.create(
                     tenant=order.tenant, outlet=order.outlet, order=order,
@@ -297,7 +322,7 @@ def razorpay_webhook(request):
                 )
 
             try:
-                result = process_payment(order, "upi", amount_to_record, user=None, reference=razorpay_payment_id)
+                result = process_payment(order, method, amount_to_record, user=None, reference=razorpay_payment_id)
                 if result["order_closed"] and order.table:
                     # Mirrors pay_order's behaviour (payment_views.py) — process_payment
                     # itself doesn't know about tables, so every caller that closes an
@@ -308,7 +333,7 @@ def razorpay_webhook(request):
                 # Lost the race between this check and process_payment's own lock —
                 # treat it the same as the already-fully-paid case above.
                 Payment.objects.create(
-                    order=order, method="upi", amount=amount_to_record, reference=razorpay_payment_id,
+                    order=order, method=method, amount=amount_to_record, reference=razorpay_payment_id,
                 )
                 OrderEvent.objects.create(
                     tenant=order.tenant, outlet=order.outlet, order=order,
