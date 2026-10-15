@@ -1,0 +1,48 @@
+{% extends "website/base.html" %}
+{% block title %}Terms & Conditions | {{ biz.name }}{% endblock %}
+{% block content %}
+<div class="prose">
+  <h1>Terms &amp; Conditions</h1>
+  <p class="muted">Last updated: {{ biz.policy_updated }}</p>
+
+  <p>These terms apply to everyone who uses this website, orders food from {{ biz.name }}, or subscribes to Royal Shetkari POS. "We", "us" and "our" mean {{ biz.legal_name }}, {{ biz.address }}. By placing an order, making a payment or using our software you agree to these terms.</p>
+
+  <h2>1. Food orders</h2>
+  <ul>
+    <li>Menu prices are in Indian Rupees (INR). GST and any delivery or packing charge are shown on your bill before you pay.</li>
+    <li>Orders are confirmed when we accept them by phone, WhatsApp, at the counter or through our ordering system.</li>
+    <li>Dishes may contain allergens such as nuts, dairy, gluten and seafood. Tell us about allergies before ordering; we cannot guarantee an allergen-free kitchen.</li>
+    <li>Photos are for illustration; portion, garnish and presentation may vary.</li>
+  </ul>
+
+  <h2>2. Royal Shetkari POS subscription</h2>
+  <ul>
+    <li>The subscription is &#8377;{{ plan.price|floatformat:"0g" }} per outlet per month plus GST, billed in advance. A {{ plan.trial_days }}-day free trial is offered to new restaurants.</li>
+    <li>You are responsible for keeping staff logins secure and for the accuracy of the menu, prices and tax settings you enter.</li>
+    <li>You own your restaurant's data. We process it only to provide the service, as described in our <a href="{% url 'site_privacy' %}">Privacy Policy</a>.</li>
+    <li>We aim for continuous availability but do not guarantee uninterrupted service. Planned maintenance is announced in advance where possible.</li>
+    <li>We may suspend an account for non-payment or misuse, after notice by email or WhatsApp.</li>
+  </ul>
+
+  <h2>3. Payments</h2>
+  <p>Online payments are processed by our payment partner (such as Razorpay) using UPI, debit and credit cards, net banking and wallets. We do not see or store your full card details. A payment is complete only when we receive confirmation from the payment partner.</p>
+
+  <h2>4. Cancellations and refunds</h2>
+  <p>See our <a href="{% url 'site_refund' %}">Cancellation &amp; Refund Policy</a>. Delivery terms are in our <a href="{% url 'site_shipping' %}">Shipping &amp; Delivery Policy</a>.</p>
+
+  <h2>5. Acceptable use</h2>
+  <p>Do not misuse this website or the software: no unauthorised access, scraping, interference with the service, or unlawful content.</p>
+
+  <h2>6. Liability</h2>
+  <p>To the extent the law allows, our total liability for any claim is limited to the amount you paid us for the order or the month of subscription concerned. We are not liable for indirect or consequential losses.</p>
+
+  <h2>7. Changes</h2>
+  <p>We may update these terms. The date at the top shows the latest version; continued use after a change means you accept it.</p>
+
+  <h2>8. Governing law</h2>
+  <p>These terms are governed by the laws of India. Courts in {{ biz.jurisdiction }} have exclusive jurisdiction.</p>
+
+  <h2>9. Contact</h2>
+  <p>{{ biz.legal_name }}, {{ biz.address }}. Phone <a href="tel:{{ biz.phone_link }}">{{ biz.phone }}</a>, email <a href="mailto:{{ biz.email }}">{{ biz.email }}</a>.</p>
+</div>
+{% endblock %}

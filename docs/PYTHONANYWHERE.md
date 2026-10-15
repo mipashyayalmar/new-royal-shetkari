@@ -26,7 +26,13 @@ CSRF_TRUSTED_ORIGINS=https://royalhotel.pythonanywhere.com
 BASE_URL=https://royalhotel.pythonanywhere.com
 DB_CONN_MAX_AGE=0
 EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
+PUBLIC_WEBSITE=True
+CANONICAL_HOST=royalhotel.pythonanywhere.com
 ```
+
+`PUBLIC_WEBSITE=True` shows the public business website and policy pages (`core/website.py`)
+at `/` instead of sending visitors to login; `CANONICAL_HOST` lets search engines and
+Razorpay's website check index those pages.
 
 `FIELD_ENCRYPTION_KEY` must match the key the database was created with, or saved
 payment secrets can't be read.

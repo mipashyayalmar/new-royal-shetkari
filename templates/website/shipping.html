@@ -1,0 +1,26 @@
+{% extends "website/base.html" %}
+{% block title %}Shipping & Delivery Policy | {{ biz.name }}{% endblock %}
+{% block content %}
+<div class="prose">
+  <h1>Shipping &amp; Delivery Policy</h1>
+  <p class="muted">Last updated: {{ biz.policy_updated }}</p>
+
+  <h2>Food delivery</h2>
+  <ul>
+    <li>We deliver freshly cooked food only within our local delivery area in {{ biz.city }}. We do not ship food outside the city or by courier.</li>
+    <li>Orders are usually delivered within <strong>30 to 60 minutes</strong> of confirmation. At busy times or in bad weather it can take longer; we will tell you if there is a delay.</li>
+    <li>Any delivery charge is shown before you pay. Takeaway orders are ready for pickup at the restaurant at the time we give you.</li>
+    <li>Please make sure the address and phone number are correct and someone is available to receive the order. If we cannot deliver because of a wrong address or no answer, the order may not be refundable once cooked.</li>
+  </ul>
+
+  <h2>Royal Shetkari POS (software)</h2>
+  <ul>
+    <li>The POS is an online service. Nothing physical is shipped.</li>
+    <li>Your account is activated, and login details sent by WhatsApp or email, within <strong>24 hours</strong> of a successful payment (usually much sooner).</li>
+    <li>Printers, tablets and other hardware are not sold by us.</li>
+  </ul>
+
+  <h2>Questions</h2>
+  <p>Call <a href="tel:{{ biz.phone_link }}">{{ biz.phone }}</a> or email <a href="mailto:{{ biz.email }}">{{ biz.email }}</a>.</p>
+</div>
+{% endblock %}

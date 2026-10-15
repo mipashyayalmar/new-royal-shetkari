@@ -4,6 +4,7 @@ import logging
 from django.conf import settings
 from django.shortcuts import render
 from tenants.models import Tenant
+from . import website
 from .tenant_context import set_current_tenant_outlet, clear_current_tenant_outlet
 from .request_context import set_current_trace_id, clear_current_trace_id
 
@@ -27,7 +28,7 @@ class SearchIndexingMiddleware:
     open their own subdomain to reach login), it is only marked noindex.
     """
 
-    MARKETING_PATHS = {"/"}
+    MARKETING_PATHS = set(website.PATHS)
     MARKETING_ONLY_PATHS = set()
     GUEST_MENU_PREFIXES = ("/menu/digital-menu/", "/menu/qr/")
 

@@ -1,0 +1,36 @@
+{% extends "website/base.html" %}
+{% block title %}Privacy Policy | {{ biz.name }}{% endblock %}
+{% block content %}
+<div class="prose">
+  <h1>Privacy Policy</h1>
+  <p class="muted">Last updated: {{ biz.policy_updated }}</p>
+
+  <p>This policy explains what personal data {{ biz.legal_name }} collects when you order food, pay us, use this website, or use Royal Shetkari POS, and how we protect it. We follow the Digital Personal Data Protection Act, 2023 and the Information Technology Act, 2000.</p>
+
+  <h2>What we collect</h2>
+  <ul>
+    <li><strong>Guests:</strong> name, phone number, delivery address and order history, when you give them to place or receive an order or a digital bill.</li>
+    <li><strong>POS subscribers:</strong> restaurant name, owner and staff names, phone numbers, email, GSTIN and billing details, plus the menu, order and sales data you enter.</li>
+    <li><strong>Payments:</strong> transaction ID, amount, status and payment method. Card, UPI and bank details are collected and processed by our payment partner (such as Razorpay), not stored by us.</li>
+    <li><strong>Technical:</strong> IP address, browser type and log data needed to run and secure the service. We use only the cookies needed for login and security.</li>
+  </ul>
+
+  <h2>How we use it</h2>
+  <ul>
+    <li>To prepare, deliver and bill your order, and send your bill or receipt by WhatsApp or SMS.</li>
+    <li>To provide, support and bill the POS subscription.</li>
+    <li>To process payments and refunds, prevent fraud, and meet tax and legal obligations.</li>
+    <li>To reply to your questions and complaints.</li>
+  </ul>
+  <p>We do not sell personal data. We share it only with service providers who help us run the business (payment gateway, hosting, messaging) under confidentiality obligations, or when the law requires.</p>
+
+  <h2>Storage and security</h2>
+  <p>Data is stored on secured servers. Sensitive settings are encrypted, access is limited by staff role, and connections use HTTPS. We keep data only as long as needed for the purposes above or as required by tax law.</p>
+
+  <h2>Your rights</h2>
+  <p>You can ask to see, correct or delete your personal data, or withdraw consent for messages, by contacting us below. We reply within 30 days.</p>
+
+  <h2>Contact / Grievance officer</h2>
+  <p>{{ biz.legal_name }}, {{ biz.address }}. Email <a href="mailto:{{ biz.email }}">{{ biz.email }}</a>, phone <a href="tel:{{ biz.phone_link }}">{{ biz.phone }}</a>.</p>
+</div>
+{% endblock %}

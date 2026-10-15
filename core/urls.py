@@ -20,7 +20,7 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import TemplateView
-from core import views
+from core import views, website
 
 def custom_404(request, exception):
     from django.shortcuts import render
@@ -91,14 +91,18 @@ def sitemap_xml(request):
     # update it (it had drifted to a 3-month-old date before this fix).
     today = timezone.localdate().isoformat()
     base = request.build_absolute_uri("/").rstrip("/")
-    content = f"""<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    urls = "".join(
+        f"""
   <url>
-    <loc>{base}/</loc>
+    <loc>{base}{path}</loc>
     <lastmod>{today}</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
-  </url>
+    <priority>{'1.0' if path == '/' else '0.7'}</priority>
+  </url>"""
+        for path in website.PATHS
+    )
+    content = f"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}
 </urlset>"""
     return HttpResponse(content, content_type='application/xml')
 
@@ -111,6 +115,18 @@ urlpatterns = [
 
     # default redirect — authenticated → dashboard, anonymous → login
     path('', views.landing, name='landing'),
+
+    # Public business website and policies (core/website.py). "/" itself
+    # is views.landing above, which renders website.home for visitors.
+    path('', website.home, name='site_home'),
+    path('about/', website.about, name='site_about'),
+    path('our-menu/', website.menu, name='site_menu'),
+    path('pos-software/', website.pos_software, name='site_pos'),
+    path('contact/', website.contact, name='site_contact'),
+    path('terms/', website.terms, name='site_terms'),
+    path('privacy-policy/', website.privacy, name='site_privacy'),
+    path('refund-policy/', website.refund, name='site_refund'),
+    path('shipping-policy/', website.shipping, name='site_shipping'),
 
     # Health check
     path('health/', views.health_check, name='health_check'),

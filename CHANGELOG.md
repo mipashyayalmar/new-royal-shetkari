@@ -7,6 +7,17 @@ the source of truth.
 
 ---
 
+## 2026-10-16: Public website for Razorpay
+
+### Added
+- **Public business website at `/`.** Home, About, Menu & Prices, POS Software (₹1,499 per outlet per month), Contact, and Terms, Privacy, Cancellation & Refund, and Shipping & Delivery policies: the pages Razorpay checks before activating an account. Django views in `core/website.py`, templates in `templates/website/`; business details are set once in `BUSINESS`. Signed-in staff still go from `/` to the floor plan.
+- **`PUBLIC_WEBSITE` setting.** On by default, off on a restaurant PC install (which still opens on login). The PythonAnywhere copy turns it on in its `.env`, together with `CANONICAL_HOST` so the pages are not marked `noindex`.
+
+### Removed
+- `public/index.html`, the one-card welcome page the website replaces.
+
+---
+
 ## 2026-10-11: Install the app on Android
 
 ### Fixed

@@ -87,6 +87,24 @@ What makes it installable: [`templates/manifest.json`](templates/manifest.json) 
 
 > Printing from the phone needs the Print Agent running on a PC on the same network (the orange "Agent offline" banner means it isn't). See [`PRINTING_SYSTEM.md`](PRINTING_SYSTEM.md) and [`docs/PRINTER_SETUP.md`](docs/PRINTER_SETUP.md).
 
+### Public website and Razorpay pages
+
+Visitors who are not signed in see the public business website at `/` (signed-in staff still go to the floor plan). These are the pages a payment gateway such as Razorpay checks before it activates an account:
+
+| Page | Link |
+|---|---|
+| Home | [/](https://royalhotel.pythonanywhere.com/) |
+| About Us | [/about/](https://royalhotel.pythonanywhere.com/about/) |
+| Menu & Prices (food) | [/our-menu/](https://royalhotel.pythonanywhere.com/our-menu/) |
+| POS Software plan (₹1,499/month) | [/pos-software/](https://royalhotel.pythonanywhere.com/pos-software/) |
+| Contact Us | [/contact/](https://royalhotel.pythonanywhere.com/contact/) |
+| Terms & Conditions | [/terms/](https://royalhotel.pythonanywhere.com/terms/) |
+| Privacy Policy | [/privacy-policy/](https://royalhotel.pythonanywhere.com/privacy-policy/) |
+| Cancellation & Refund Policy | [/refund-policy/](https://royalhotel.pythonanywhere.com/refund-policy/) |
+| Shipping & Delivery Policy | [/shipping-policy/](https://royalhotel.pythonanywhere.com/shipping-policy/) |
+
+Business name, address, phone, email and the POS price are set once in [`core/website.py`](core/website.py) (`BUSINESS`, `POS_PLAN`); the pages are in [`templates/website/`](templates/website/). The website is on when `PUBLIC_WEBSITE=True` (the default except on a restaurant PC install).
+
 ### Deploying updates to the live site
 
 Full guide: [`docs/PYTHONANYWHERE.md`](docs/PYTHONANYWHERE.md). In short:
