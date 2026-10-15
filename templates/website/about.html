@@ -1,0 +1,23 @@
+{% extends "website/base.html" %}
+{% block title %}About Us | {{ biz.name }}{% endblock %}
+{% block content %}
+<div class="prose">
+  <h1>About {{ biz.name }}</h1>
+  <p class="lead">A Maharashtrian restaurant in {{ biz.city }}, and the software that runs it.</p>
+
+  <h2>The restaurant</h2>
+  <p>{{ biz.name }} serves the food of Maharashtra's farms and coasts: Puneri and Kolhapuri misal, pithla bhakri, bharli vangi, Kolhapuri tambda and pandhra rassa, Malvani fish and kombdi vade, alongside North Indian curries, biryani, tandoor breads, snacks, beverages and desserts.</p>
+  <p>Guests can eat in, take away, or order for local delivery in {{ biz.city }}. Payments are accepted by UPI, debit and credit card, net banking and cash.</p>
+
+  <h2>Royal Shetkari POS</h2>
+  <p>To run our own floor, kitchen and billing we built a restaurant point-of-sale system: table and floor management, kitchen order tickets, a kitchen display, GST billing, inventory, staff shifts and reports. We now offer it to other restaurants as a monthly subscription. See <a href="{% url 'site_pos' %}">POS Software</a> for the plan and price.</p>
+
+  <h2>Business details</h2>
+  <dl class="contact">
+    <dt>Business name</dt><dd>{{ biz.legal_name }}</dd>
+    <dt>Location</dt><dd>{{ biz.address }}</dd>
+    <dt>Phone</dt><dd><a href="tel:{{ biz.phone_link }}">{{ biz.phone }}</a></dd>
+    <dt>Email</dt><dd><a href="mailto:{{ biz.email }}">{{ biz.email }}</a></dd>
+  </dl>
+</div>
+{% endblock %}

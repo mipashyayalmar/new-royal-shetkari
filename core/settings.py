@@ -104,6 +104,11 @@ else:
 # core.middleware.SearchIndexingMiddleware.
 CANONICAL_HOST = os.getenv('CANONICAL_HOST', '')
 
+# The public business website (core/website.py) at "/" for visitors who are
+# not signed in. Off on the restaurant's own PC, which opens on login; the
+# PythonAnywhere copy is a LOCAL_INSTALL but turns it on in its .env.
+PUBLIC_WEBSITE = os.getenv('PUBLIC_WEBSITE', str(not LOCAL_INSTALL)) == 'True'
+
 # Cloudflare / reverse-proxy: trust forwarded headers for HTTPS detection
 USE_X_FORWARDED_HOST    = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -271,8 +276,8 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
-# WhiteNoise serves files from public/ at the root URL (/)
-# index.html in public/ is served at exactly / (the landing page)
+# WhiteNoise serves files from public/ at the root URL (/), e.g. /android/.
+# The home page itself is the Django website (core/website.py), not a file.
 WHITENOISE_ROOT        = BASE_DIR / 'public'
 WHITENOISE_INDEX_FILE  = True
 if LOCAL_INSTALL:

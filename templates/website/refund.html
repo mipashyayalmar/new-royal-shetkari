@@ -1,0 +1,39 @@
+{% extends "website/base.html" %}
+{% block title %}Cancellation & Refund Policy | {{ biz.name }}{% endblock %}
+{% block content %}
+<div class="prose">
+  <h1>Cancellation &amp; Refund Policy</h1>
+  <p class="muted">Last updated: {{ biz.policy_updated }}</p>
+
+  <h2>Food orders</h2>
+  <h3>Cancellation</h3>
+  <ul>
+    <li>You can cancel an order for a full refund before our kitchen starts preparing it. Call or WhatsApp <a href="tel:{{ biz.phone_link }}">{{ biz.phone }}</a> as soon as possible.</li>
+    <li>Once preparation has started, the order cannot be cancelled, because food is cooked fresh to order.</li>
+    <li>If we cancel your order (for example, an item is unavailable or we cannot deliver to your address), you get a full refund.</li>
+  </ul>
+  <h3>Wrong, missing or poor-quality items</h3>
+  <ul>
+    <li>Report it within 2 hours of delivery or pickup, with a photo where possible.</li>
+    <li>After checking, we will replace the item or refund its price, as you prefer.</li>
+  </ul>
+
+  <h2>Royal Shetkari POS subscription</h2>
+  <ul>
+    <li>The {{ plan.trial_days }}-day trial is free; nothing is charged if you do not continue.</li>
+    <li>You can cancel the subscription any time. It stays active until the end of the month already paid, and is not renewed.</li>
+    <li>Monthly fees already paid are not refunded for partly used months.</li>
+    <li>If you were charged twice, charged after cancelling, or charged an incorrect amount, tell us within 7 days and we will refund the extra amount in full.</li>
+  </ul>
+
+  <h2>How refunds are paid</h2>
+  <ul>
+    <li>Approved refunds are made to the original payment method (UPI, card, net banking or wallet) through our payment partner.</li>
+    <li>We start the refund within 2 working days of approval. It usually reaches your account in <strong>5 to 7 working days</strong>, depending on your bank.</li>
+    <li>Cash payments are refunded in cash at the restaurant or by UPI.</li>
+  </ul>
+
+  <h2>Contact</h2>
+  <p>Send refund requests with your order or invoice number to <a href="mailto:{{ biz.email }}">{{ biz.email }}</a> or WhatsApp <a href="{{ biz.whatsapp_link }}" target="_blank" rel="noopener">{{ biz.phone }}</a>.</p>
+</div>
+{% endblock %}

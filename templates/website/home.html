@@ -1,0 +1,43 @@
+{% extends "website/base.html" %}
+{% block title %}{{ biz.name }} | Maharashtrian Restaurant & Restaurant POS, {{ biz.city }}{% endblock %}
+{% block content %}
+<section>
+  <span class="tag">{{ biz.city }}, Maharashtra</span>
+  <h1>{{ biz.name }}</h1>
+  <p class="lead">Authentic Maharashtrian food, from Puneri misal and bhakri thalis to Kolhapuri mutton and Malvani fish. We also make <strong>Royal Shetkari POS</strong>, the billing and kitchen software that runs our restaurant, for other restaurants to use.</p>
+  <div class="actions">
+    <a class="btn" href="{% url 'site_menu' %}">See our menu &amp; prices</a>
+    <a class="btn ghost" href="{% url 'site_pos' %}">POS software, &#8377;{{ plan.price|floatformat:"0g" }}/{{ plan.period }}</a>
+  </div>
+</section>
+
+<h2>What we offer</h2>
+<div class="grid">
+  <div class="card">
+    <h3>Restaurant food</h3>
+    <p class="muted">Dine-in, takeaway and local delivery in {{ biz.city }}. Pay by UPI, card, net banking or cash. Dishes from &#8377;{{ price_min }} to &#8377;{{ price_max }}.</p>
+    <a href="{% url 'site_menu' %}">Full menu with prices &rarr;</a>
+  </div>
+  <div class="card">
+    <h3>Royal Shetkari POS</h3>
+    <p class="muted">Cloud restaurant POS: tables, KOT, kitchen display, GST billing, inventory and reports. &#8377;{{ plan.price|floatformat:"0g" }} per outlet per month, {{ plan.trial_days }}-day free trial.</p>
+    <a href="{% url 'site_pos' %}">Plan details &rarr;</a>
+  </div>
+  <div class="card">
+    <h3>Talk to us</h3>
+    <p class="muted">Orders, bookings, software demos and support.</p>
+    <p style="margin:0"><a href="tel:{{ biz.phone_link }}">{{ biz.phone }}</a><br><a href="mailto:{{ biz.email }}">{{ biz.email }}</a></p>
+  </div>
+</div>
+
+<h2>Popular dishes</h2>
+<div class="grid">
+  {% for name, desc, price, veg in highlights %}
+  <div class="card">
+    <h3><span class="dot {% if veg %}veg{% else %}nonveg{% endif %}" aria-label="{% if veg %}Vegetarian{% else %}Non-vegetarian{% endif %}"></span>{{ name }}</h3>
+    <p class="muted">{{ desc }}</p>
+    <span class="price">&#8377;{{ price }}</span>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

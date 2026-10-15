@@ -39,11 +39,13 @@ def csrf_failure(request, reason=""):
 
 
 def landing(request):
-    # WhiteNoise serves public/index.html at / for unauthenticated users
-    # before this view is ever called. This view only runs when WhiteNoise
-    # doesn't intercept — e.g. authenticated users who should go to dashboard.
+    # Signed-in staff go to the dashboard; visitors see the public website
+    # (core/website.py), or the login page where that is turned off.
     if request.user.is_authenticated:
         return redirect("/dashboard/")
+    if settings.PUBLIC_WEBSITE:
+        from core import website
+        return website.home(request)
     return redirect("/login/")
 
 

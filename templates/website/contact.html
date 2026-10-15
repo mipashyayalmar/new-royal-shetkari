@@ -1,0 +1,21 @@
+{% extends "website/base.html" %}
+{% block title %}Contact Us | {{ biz.name }}{% endblock %}
+{% block content %}
+<div class="prose">
+  <h1>Contact Us</h1>
+  <p class="lead">For food orders, table bookings, POS software demos, billing questions, refunds or complaints, reach us here. We reply within one working day.</p>
+
+  <div class="card" style="margin-top:24px">
+    <dl class="contact">
+      <dt>Business</dt><dd>{{ biz.legal_name }}</dd>
+      <dt>Address</dt><dd>{{ biz.address }}</dd>
+      <dt>Phone</dt><dd><a href="tel:{{ biz.phone_link }}">{{ biz.phone }}</a></dd>
+      <dt>WhatsApp</dt><dd><a href="{{ biz.whatsapp_link }}" target="_blank" rel="noopener">{{ biz.phone }}</a></dd>
+      <dt>Email</dt><dd><a href="mailto:{{ biz.email }}">{{ biz.email }}</a></dd>
+    </dl>
+  </div>
+
+  <h2>Payment and refund queries</h2>
+  <p>Please include your order or invoice number, the date, and the amount paid. Refunds follow our <a href="{% url 'site_refund' %}">Cancellation &amp; Refund Policy</a>.</p>
+</div>
+{% endblock %}

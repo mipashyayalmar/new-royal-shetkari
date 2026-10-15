@@ -1,0 +1,34 @@
+{% extends "website/base.html" %}
+{% block title %}Royal Shetkari POS: Restaurant Billing Software, &#8377;{{ plan.price }}/month{% endblock %}
+{% block description %}Restaurant POS software for Indian restaurants: tables, KOT, kitchen display, GST billing, inventory and reports. Rs {{ plan.price }} per outlet per month.{% endblock %}
+{% block style %}
+  .plan { max-width: 520px; margin-top: 28px; }
+  .plan .amount { font-family: 'DM Serif Display', serif; font-size: 3rem; line-height: 1; }
+  .plan ul { padding-left: 20px; }
+{% endblock %}
+{% block content %}
+<h1>Royal Shetkari POS</h1>
+<p class="lead">The restaurant point-of-sale software we built for our own kitchen and floor, now available to other restaurants, cafes and QSR counters in India. It runs in the browser and installs as an app on Android tablets and phones.</p>
+
+<div class="card plan">
+  <span class="tag">One simple plan</span>
+  <p style="margin:16px 0 4px"><span class="amount">&#8377;{{ plan.price|floatformat:"0g" }}</span> <span class="muted">/ {{ plan.period }}, {{ plan.unit }}</span></p>
+  <p class="muted" style="margin-top:0">GST at 18% extra. {{ plan.trial_days }}-day free trial, no card needed. Cancel any time.</p>
+  <ul>
+    {% for f in plan.features %}<li>{{ f }}</li>{% endfor %}
+  </ul>
+  <div class="actions">
+    <a class="btn" href="{{ biz.whatsapp_link }}?text=I%20want%20a%20Royal%20Shetkari%20POS%20demo" target="_blank" rel="noopener">Book a free demo</a>
+    <a class="btn ghost" href="tel:{{ biz.phone_link }}">Call {{ biz.phone }}</a>
+  </div>
+</div>
+
+<h2>How buying works</h2>
+<ol class="prose">
+  <li>Contact us for a demo and your free {{ plan.trial_days }}-day trial account.</li>
+  <li>We set up your outlet, menu, tables and staff logins with you.</li>
+  <li>To continue after the trial, pay the monthly fee online by UPI, card or net banking. You get a GST invoice by email.</li>
+  <li>Your account stays active for the paid month. Renew monthly; cancel any time before the next billing date.</li>
+</ol>
+<p class="muted">The software is delivered online: no physical goods are shipped. See our <a href="{% url 'site_refund' %}">refund policy</a> and <a href="{% url 'site_terms' %}">terms</a>.</p>
+{% endblock %}

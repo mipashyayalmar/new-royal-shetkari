@@ -475,15 +475,10 @@ python manage.py collectstatic --noinput
 ```
 WhiteNoise serves static files through gunicorn — no nginx `/static/` alias needed.
 
-### ❌ 404 on landing page `rasova.net/`
-**Cause:** WhiteNoise not finding `public/index.html`.
-**Fix:**
-```bash
-ls /home/ubuntu/rasova/public/index.html  # verify file exists
-python manage.py collectstatic --noinput  # re-run collectstatic
-sudo fuser -k 8000/tcp 2>/dev/null || true && sleep 2
-gunicorn --bind 127.0.0.1:8000 --workers 2 --timeout 120 --daemon core.wsgi:application
-```
+### ❌ Landing page `rasova.net/` shows the login page
+**Cause:** `PUBLIC_WEBSITE` is `False` in `.env` (or `LOCAL_INSTALL=True` without `PUBLIC_WEBSITE=True`).
+The home page and policy pages are Django views in `core/website.py`, templates in `templates/website/`.
+**Fix:** set `PUBLIC_WEBSITE=True` in `.env` and restart gunicorn.
 
 ### ❌ 502 Bad Gateway
 **Cause:** Gunicorn is not running.
@@ -518,7 +513,7 @@ DB name:          rasova_prod
 DB user:          rasova
 Redis:            redis://127.0.0.1:6379/0
 Logs:             /home/ubuntu/rasova/logs/errors.log
-Landing page:     /home/ubuntu/rasova/public/index.html
+Landing page:     core/website.py + templates/website/ (PUBLIC_WEBSITE=True)
 Static files:     /home/ubuntu/rasova/staticfiles/ (after collectstatic)
 Branch to deploy: qsr
 GitHub repo:      github.com/mipashyayalmar/new-royal-shetkari
